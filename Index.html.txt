@@ -1,0 +1,4538 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap');
+
+    * {
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg: #f4efe3;
+      --sidebar: #dcebdc;
+      --sidebar-dark: #c7ddc7;
+      --card: #fffdf7;
+      --card2: #f7f3e8;
+      --text: #31443a;
+      --muted: #75857a;
+      --border: #dce3d5;
+      --primary: #789b78;
+      --primary-dark: #5f8363;
+      --accent: #b7cda9;
+      --danger: #c96b62;
+      --danger-light: #f7dfdb;
+      --success: #67956c;
+      --success-light: #deeedf;
+      --shadow: 0 5px 20px rgba(66, 83, 66, .08);
+    }
+
+    body.night {
+      --bg: #10243a;
+      --sidebar: #17324d;
+      --sidebar-dark: #204463;
+      --card: #17304a;
+      --card2: #1d3a56;
+      --text: #edf5fb;
+      --muted: #aabed0;
+      --border: #2c4c67;
+      --primary: #6096c2;
+      --primary-dark: #4d7fa8;
+      --accent: #75a8d0;
+      --danger: #df8177;
+      --danger-light: #4c2c31;
+      --success: #77b67f;
+      --success-light: #25492e;
+      --shadow: 0 5px 20px rgba(0,0,0,.22);
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Quicksand', sans-serif;
+      font-size: 14px;
+      transition: .25s;
+    }
+
+    button, input, select, textarea {
+      font-family: 'Quicksand', sans-serif;
+    }
+
+    .app {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* SIDEBAR */
+
+    .sidebar {
+      width: 245px;
+      min-height: 100vh;
+      background: var(--sidebar);
+      padding: 22px 15px;
+      position: fixed;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      overflow-y: auto;
+      z-index: 10;
+      border-right: 1px solid var(--border);
+    }
+
+    .brand {
+      padding: 10px 12px 22px;
+      text-align: center;
+    }
+
+    .brand-icon {
+      font-size: 38px;
+      margin-bottom: 5px;
+    }
+
+    .brand h1 {
+      font-size: 18px;
+      margin: 0;
+      font-weight: 700;
+    }
+
+    .brand p {
+      font-size: 11px;
+      margin: 4px 0 0;
+      color: var(--muted);
+    }
+
+    .nav-title {
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      padding: 12px;
+      text-transform: uppercase;
+    }
+
+    .nav-btn {
+      width: 100%;
+      border: 0;
+      background: transparent;
+      color: var(--text);
+      padding: 12px 13px;
+      border-radius: 11px;
+      margin-bottom: 5px;
+      text-align: left;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      transition: .2s;
+    }
+
+    .nav-btn:hover {
+      background: var(--sidebar-dark);
+    }
+
+    .nav-btn.active {
+      background: var(--primary);
+      color: white;
+    }
+
+    .nav-icon {
+      width: 23px;
+      text-align: center;
+      font-size: 16px;
+    }
+
+    .theme-box {
+      margin-top: 18px;
+      padding: 12px;
+      border-top: 1px solid var(--border);
+    }
+
+    .theme-btn {
+      width: 100%;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      border-radius: 10px;
+      padding: 10px;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    /* MAIN */
+
+    .main {
+      margin-left: 245px;
+      width: calc(100% - 245px);
+      padding: 28px;
+    }
+
+    .page {
+      display: none;
+      max-width: 1500px;
+      margin: auto;
+    }
+
+    .page.active {
+      display: block;
+    }
+
+    .page-header {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 17px;
+      padding: 24px 27px;
+      box-shadow: var(--shadow);
+      margin-bottom: 20px;
+    }
+
+    .page-header h2 {
+      margin: 0;
+      font-size: 27px;
+    }
+
+    .page-header p {
+      margin: 5px 0 0;
+      color: var(--muted);
+    }
+
+    /* CARDS */
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      gap: 15px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px;
+      box-shadow: var(--shadow);
+    }
+
+    .label {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .value {
+      font-size: 21px;
+      font-weight: 700;
+    }
+
+    .small-value {
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    /* SECTION */
+
+    .section {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 22px;
+      box-shadow: var(--shadow);
+      margin-bottom: 20px;
+      overflow-x: auto;
+    }
+
+    .section-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 17px;
+    }
+
+    .section-title h3 {
+      margin: 0;
+      font-size: 18px;
+    }
+
+    .section-title button {
+      flex-shrink: 0;
+    }
+
+    /* COLLAPSIBLE */
+
+    .collapse-head {
+      cursor: pointer;
+      user-select: none;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .collapse-arrow {
+      font-size: 13px;
+      transition: transform .2s;
+    }
+
+    .collapse-head.closed .collapse-arrow {
+      transform: rotate(-90deg);
+    }
+
+    .collapse-body {
+      margin-top: 18px;
+    }
+
+    .collapse-body.hidden {
+      display: none;
+    }
+
+    /* FORM */
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 13px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .form-group label {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      border: 1px solid var(--border);
+      background: var(--card2);
+      color: var(--text);
+      padding: 10px 12px;
+      border-radius: 9px;
+      outline: none;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 70px;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      border-color: var(--primary);
+    }
+
+    /* BUTTONS */
+
+    .btn {
+      border: 0;
+      border-radius: 9px;
+      padding: 10px 15px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 12px;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-dark);
+    }
+
+    .btn-secondary {
+      background: var(--card2);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .btn-danger {
+      background: var(--danger);
+      color: white;
+    }
+
+    .btn-success {
+      background: var(--success);
+      color: white;
+    }
+
+    .btn-small {
+      padding: 6px 9px;
+      font-size: 11px;
+    }
+
+    .btn:disabled {
+      opacity: .5;
+      cursor: not-allowed;
+    }
+
+    .button-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 15px;
+    }
+
+    /* HARVEST */
+
+    .harvest-size-row {
+      display: grid;
+      grid-template-columns: 1.1fr 1fr 1fr auto;
+      gap: 10px;
+      align-items: end;
+      padding: 12px;
+      background: var(--card2);
+      border: 1px solid var(--border);
+      border-radius: 11px;
+      margin-bottom: 9px;
+    }
+
+    .harvest-entry {
+      border: 1px solid var(--border);
+      background: var(--card2);
+      border-radius: 11px;
+      padding: 13px;
+      margin-bottom: 10px;
+    }
+
+    .entry-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .entry-name {
+      font-weight: 700;
+    }
+
+    .counter {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .counter button {
+      width: 29px;
+      height: 29px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      font-size: 17px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .counter .count {
+      min-width: 48px;
+      text-align: center;
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .entry-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 9px;
+    }
+
+    .entry-stat {
+      background: var(--card);
+      border-radius: 8px;
+      padding: 8px;
+    }
+
+    .entry-stat span {
+      display: block;
+      color: var(--muted);
+      font-size: 9px;
+      font-weight: 700;
+      margin-bottom: 3px;
+    }
+
+    .entry-stat strong {
+      font-size: 13px;
+    }
+
+    .loose-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 9px;
+    }
+
+    .loose-row input {
+      max-width: 140px;
+    }
+
+    /* TABLE */
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 850px;
+      font-size: 12px;
+    }
+
+    th {
+      text-align: left;
+      background: var(--card2);
+      color: var(--muted);
+      padding: 11px;
+      border-bottom: 2px solid var(--border);
+      white-space: nowrap;
+    }
+
+    td {
+      padding: 10px 11px;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+      font-weight: 600;
+    }
+
+    tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .total-row td {
+      background: var(--card2);
+      font-weight: 700;
+    }
+
+    /* STATUS */
+
+    .status {
+      padding: 11px 13px;
+      border-radius: 9px;
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .status-success {
+      background: var(--success-light);
+      color: var(--success);
+    }
+
+    .status-error {
+      background: var(--danger-light);
+      color: var(--danger);
+    }
+
+    .status-info {
+      background: var(--card2);
+      color: var(--muted);
+    }
+
+    .empty {
+      color: var(--muted);
+      padding: 18px 0;
+      text-align: center;
+    }
+
+    /* PULL OUT */
+
+    .pullout-box {
+      background: var(--card2);
+      border: 1px solid var(--border);
+      padding: 16px;
+      border-radius: 12px;
+    }
+
+    .pullout-note {
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.6;
+      margin-bottom: 13px;
+    }
+
+    /* RESPONSIVE */
+
+    @media(max-width: 900px) {
+      .sidebar {
+        width: 205px;
+      }
+
+      .main {
+        margin-left: 205px;
+        width: calc(100% - 205px);
+        padding: 17px;
+      }
+
+      .harvest-size-row {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .entry-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media(max-width: 650px) {
+      .sidebar {
+        position: relative;
+        width: 100%;
+        min-height: auto;
+      }
+
+      .app {
+        display: block;
+      }
+
+      .main {
+        margin-left: 0;
+        width: 100%;
+      }
+
+      .nav-btn {
+        display: inline-flex;
+        width: auto;
+        margin-right: 4px;
+      }
+
+      .nav-title {
+        display: none;
+      }
+
+      .theme-box {
+        border-top: 0;
+      }
+
+      .harvest-size-row {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+/* SMALL UNDO BUTTON */
+.undo-small {
+  font-size: 9px !important;
+  padding: 3px 6px !important;
+  width: auto !important;
+  min-width: 0 !important;
+  min-height: 22px !important;
+  height: 22px !important;
+  line-height: 1 !important;
+  border-radius: 6px !important;
+}
+  
+/* ==========================================================
+   FINAL UPDATE - GLOBAL CROPPING / SIDEBAR / REPORT
+========================================================== */
+.global-tools {
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-bottom:18px;
+}
+.global-tools .form-group { margin:0; min-width:220px; flex:1; }
+.global-tools select { width:100%; }
+.menu-toggle {
+  position:fixed;
+  top:14px;
+  left:14px;
+  z-index:1001;
+  width:42px !important;
+  min-width:42px !important;
+  height:42px !important;
+  min-height:42px !important;
+  padding:0 !important;
+  border-radius:10px !important;
+  font-size:22px !important;
+}
+.sidebar.collapsed { width:0 !important; min-width:0 !important; overflow:hidden; padding:0 !important; }
+.sidebar.collapsed * { visibility:hidden; }
+.app.sidebar-collapsed .main { margin-left:0 !important; width:100% !important; }
+.sidebar { transition:width .2s ease, min-width .2s ease, padding .2s ease; }
+.main { transition:margin-left .2s ease, width .2s ease; }
+.report-toolbar { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px; }
+.report-summary-table td, .report-summary-table th { vertical-align:top; }
+.history-card { margin-bottom:12px; border:1px solid var(--border); border-radius:12px; overflow:hidden; background:var(--card); }
+.history-summary { padding:12px; cursor:pointer; }
+.history-summary-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:10px; }
+.history-summary-grid .hs-label { font-size:11px; color:var(--muted); }
+.history-summary-grid .hs-value { font-weight:700; margin-top:3px; }
+.history-detail { padding:14px; border-top:1px solid var(--border); }
+.history-detail.hidden { display:none; }
+.report-print-area { background:#fff; color:#111; padding:20px; text-align:center; }
+.report-document, .report-document table, .report-document th, .report-document td { text-align:center; }
+.report-document .fish-size-cell { text-align:left !important; }
+.report-document .report-section-title { text-align:center !important; }
+    .dashboard-detail-toggle { cursor:pointer; user-select:none; }
+    .dashboard-detail { margin-top:10px; }
+    .dashboard-detail.hidden { display:none; }
+    .dashboard-detail table { width:100%; }
+    .harvest-size-entry { border:1px solid var(--border); background:var(--card2); border-radius:11px; margin-bottom:9px; overflow:hidden; }
+    .harvest-size-summary { min-height:48px; padding:10px 12px; display:grid; grid-template-columns:1fr 1fr auto auto; align-items:center; gap:10px; cursor:pointer; }
+    .harvest-size-summary:hover { background:var(--card); }
+    .harvest-size-detail { padding:12px; border-top:1px solid var(--border); }
+    .harvest-size-detail.hidden { display:none; }
+    .harvest-kilo-summary {
+      font-size: 15px;
+      font-weight: 700;
+    }
+    .harvest-entry-undo {
+      font-size: 9px !important;
+      padding: 3px 6px !important;
+      width: auto !important;
+      min-width: 0 !important;
+      min-height: 22px !important;
+      height: 22px !important;
+      line-height: 1 !important;
+      border-radius: 6px !important;
+    }
+    .report-modal { position:fixed; inset:0; z-index:5000; background:rgba(0,0,0,.45); display:flex; align-items:center; justify-content:center; padding:20px; overflow:auto; }
+    .report-modal.hidden { display:none; }
+    .report-paper { width:min(794px,94vw); max-height:94vh; overflow:auto; background:#fff; color:#111; padding:32px; box-shadow:0 20px 60px rgba(0,0,0,.25); border-radius:4px; text-align:left; }
+     .report-paper.report-portrait { width:min(794px,94vw); }
+    .report-document { width:100%; background:#fff; color:#111; }
+    .report-header { text-align:center; margin-bottom:24px; }
+    .report-header h2 { margin:0 0 8px; font-size:22px; }
+    .report-header-line { margin:3px 0; font-size:12px; }
+    .report-section-title { margin:22px 0 9px; font-size:16px; }
+    .report-calculation { border:1px solid #d8d8d8; padding:12px; margin:8px 0 18px; font-size:12px; line-height:1.7; }
+    .report-calculation .calc-row { display:flex; justify-content:space-between; gap:18px; border-bottom:1px solid #eee; padding:4px 0; }
+    .report-calculation .calc-row:last-child { border-bottom:0; font-weight:700; }
+    .report-note { font-size:11px; color:#555; margin-top:5px; }
+    .report-paper .portrait-table { table-layout:fixed; min-width:0; }
+    .report-paper .portrait-table th, .report-paper .portrait-table td { white-space:normal; word-break:break-word; }
+    .report-paper .fish-size-cell { width:26%; }
+    .report-download { margin-left:auto; }
+    .records-pdf-table { table-layout:fixed; width:100%; }
+    .records-pdf-table th, .records-pdf-table td { white-space:normal; word-break:break-word; }
+    .records-pdf-total { text-align:right; font-weight:800; margin:8px 0 16px; }
+    .report-modal-toolbar { display:flex; justify-content:flex-end; gap:8px; margin-bottom:16px; position:sticky; top:0; background:#fff; padding-bottom:10px; z-index:2; }
+    .report-paper table { border-collapse:collapse; width:100%; margin:10px 0 18px; }
+    .report-paper th,.report-paper td { border:1px solid #d8d8d8; padding:7px 8px; font-size:12px; text-align:left; }
+    .report-paper th { font-weight:700; }
+    .report-paper .report-total { text-align:right; font-weight:700; margin:6px 0 14px; }
+
+@media print {
+  @page { size:A4 portrait; margin:20mm 12mm 12mm 12mm; }
+  body * { visibility:hidden !important; }
+  #reportModalContent, #reportModalContent * { visibility:visible !important; }
+  #reportModalContent { position:static !important; width:100% !important; }
+  .report-modal-toolbar, .no-print { display:none !important; }
+  .report-paper { width:100% !important; max-height:none !important; overflow:visible !important; padding:0 !important; box-shadow:none !important; border-radius:0 !important; }
+  .report-modal { position:static !important; display:block !important; background:#fff !important; padding:0 !important; }
+  .report-document { width:100% !important; }
+  .report-paper table { page-break-inside:auto; }
+  .report-paper tr { page-break-inside:avoid; page-break-after:auto; }
+}
+
+  
+    /* Center all content inside non-dashboard tabs without changing the dashboard. */
+    #croppings, #transactions, #harvestRecords, #expenses, #harvest, #caretaker, #reinvestment, #capitalRecovery, #history, #printReport, #records {
+      text-align: center;
+    }
+    #croppings table, #transactions table, #harvestRecords table, #expenses table, #harvest table, #caretaker table, #reinvestment table, #capitalRecovery table, #history table, #printReport table, #records table {
+      margin-left: auto; margin-right: auto;
+    }
+    #transactions .form-group, #expenses .form-group, #harvest .form-group, #caretaker .form-group, #reinvestment .form-group, #capitalRecovery .form-group, #history .form-group, #printReport .form-group, #records .form-group {
+      text-align: center;
+    }
+    #croppings .section-title, #transactions .section-title, #harvestRecords .section-title, #expenses .section-title, #harvest .section-title, #caretaker .section-title, #reinvestment .section-title, #capitalRecovery .section-title, #history .section-title, #printReport .section-title, #records .section-title {
+      justify-content: center;
+      text-align: center;
+    }
+    #transactions .page-header h2, #transactions .page-header p, #expenses .page-header h2, #expenses .page-header p, #harvest .page-header h2, #harvest .page-header p, #harvestRecords .page-header h2, #harvestRecords .page-header p, #caretaker .page-header h2, #caretaker .page-header p, #reinvestment .page-header h2, #reinvestment .page-header p, #capitalRecovery .page-header h2, #capitalRecovery .page-header p, #history .page-header h2, #history .page-header p, #printReport .page-header h2, #printReport .page-header p, #records .page-header h2, #records .page-header p {
+      text-align: center;
+      width: 100%;
+    }
+    #transactions .form-grid, #expenses .form-grid, #harvest .form-grid, #harvestRecords .form-grid, #caretaker .form-grid, #reinvestment .form-grid, #capitalRecovery .form-grid, #history .form-grid, #printReport .form-grid, #records .form-grid {
+      justify-items: center;
+    }
+    #croppings .form-group, #transactions .form-group, #expenses .form-group, #harvest .form-group, #harvestRecords .form-group, #caretaker .form-group, #reinvestment .form-group, #capitalRecovery .form-group, #history .form-group, #printReport .form-group, #records .form-group {
+      width: 100%;
+      text-align: center;
+    }
+    #transactions .form-group label, #expenses .form-group label, #harvest .form-group label, #harvestRecords .form-group label, #caretaker .form-group label, #reinvestment .form-group label, #capitalRecovery .form-group label label, #history .form-group label, #printReport .form-group label, #records .form-group label {
+      text-align: center;
+      display: block;
+    }
+    #transactions input, #transactions select, #transactions textarea, #expenses input, #expenses select, #expenses textarea, #harvest input, #harvest select, #harvest textarea, #caretaker input, #caretaker select, #caretaker textarea, #reinvestment input, #reinvestment select, #reinvestment textarea, #capitalRecovery input, #capitalRecovery select, #capitalRecovery textarea, #history input, #history select, #history textarea, #printReport input, #printReport select, #printReport textarea, #records input, #records select, #records textarea {
+      text-align: center;
+    }
+    .page-cropping-name { text-align:center; font-weight:800; font-size:18px; margin:-4px 0 16px; color:var(--text); }
+    .global-tools { text-align:center; justify-content:center; }
+    .global-tools .form-group { text-align:center; }
+    .global-tools label { display:block; text-align:center; }
+    .settings-panel { display:none; margin-top:8px; }
+    .settings-panel.open { display:block; }
+    .settings-item { text-align:left; background:var(--card); border:1px solid var(--border); border-radius:10px; padding:9px 10px; margin-top:7px; }
+    .settings-item strong { display:block; margin-bottom:3px; }
+    .records-total-row { font-weight:800; font-size:16px; }
+    .record-card { border:1px solid var(--border); border-radius:14px; margin-bottom:14px; overflow:hidden; background:var(--card); }
+    .record-summary { padding:15px; cursor:pointer; }
+    .record-summary-grid { display:grid; grid-template-columns:repeat(5, minmax(110px,1fr)); gap:10px; align-items:center; }
+    .record-detail { padding:0 15px 15px; }
+    .record-detail.hidden { display:none; }
+    @media(max-width:800px){ .record-summary-grid{grid-template-columns:repeat(2,1fr);} }
+    .record-category-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin:12px 0 18px; }
+    .record-category-box { border:1px solid var(--border); border-radius:12px; padding:14px; background:var(--card); }
+    .record-category-box .label{margin-bottom:5px;}
+    .record-type-in{color:#15803d !important;background:rgba(34,197,94,.12);font-weight:800;}
+    .record-type-out{color:#dc2626 !important;background:rgba(239,68,68,.12);font-weight:800;}
+
+    /* Transaction entry order: Date -> Cropping ID -> Type -> Category -> Sub category -> Amount -> Payment Method -> Description.
+       Transaction ID and Year remain automatic and are hidden from manual entry. */
+    .small-total { margin-top:8px; text-align:right; font-size:12px; font-weight:600; opacity:.8; }
+    .capital-toggle { cursor:pointer; user-select:none; }
+    .capital-toggle .toggle-arrow { display:inline-block; margin-right:6px; transition:transform .2s ease; }
+    .capital-toggle.closed .toggle-arrow { transform:rotate(-90deg); }
+    .capital-detail { margin-top:10px; }
+  
+    .history-main-table{min-width:1400px;}
+    .history-main-table th,.history-main-table td{white-space:nowrap;vertical-align:middle;}
+    .history-main-table th{font-size:12px;}
+    .history-main-table td{font-size:12px;}
+
+    /* TRANSACTION EDIT MODAL */
+    .transaction-edit-modal { position:fixed; inset:0; z-index:6000; background:rgba(0,0,0,.45); display:flex; align-items:center; justify-content:center; padding:20px; overflow:auto; }
+    .transaction-edit-modal.hidden { display:none; }
+    .transaction-edit-paper { width:min(900px,96vw); max-height:94vh; overflow:auto; background:var(--card); color:var(--text); padding:24px; border:1px solid var(--border); border-radius:16px; box-shadow:0 20px 60px rgba(0,0,0,.25); }
+    .transaction-edit-header { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:18px; }
+    .transaction-edit-header h3 { margin:0; font-size:20px; }
+    .transaction-edit-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:18px; }
+</style>
+</head>
+
+<body>
+<button class="btn btn-secondary menu-toggle no-print" onclick="toggleSidebar()" title="Collapse navigation">☰</button>
+
+<div class="app">
+
+  <!-- ======================================================
+       SIDEBAR
+  ======================================================= -->
+
+  <aside class="sidebar">
+
+    <div class="brand">
+      <div class="brand-icon">🐟</div>
+      <h1>Fish Pen Tracker</h1>
+      <p>Money & Production Management</p>
+    </div>
+
+    <div class="nav-title">Main Menu</div>
+
+    <button class="nav-btn active" onclick="showPage('dashboard', this)"><span class="nav-icon">📊</span>Dashboard</button>
+    <button class="nav-btn" onclick="showPage('transactions', this)"><span class="nav-icon">💳</span>Transaction</button>
+    <button class="nav-btn" onclick="showPage('expenses', this)"><span class="nav-icon">💸</span>Expenses</button>
+    <button class="nav-btn" onclick="showPage('harvest', this)"><span class="nav-icon">⚖️</span>Harvest</button>
+    <button class="nav-btn" onclick="showPage('caretaker', this)"><span class="nav-icon">👤</span>Caretaker</button>
+    <button class="nav-btn" onclick="showPage('reinvestment', this)"><span class="nav-icon">🔄</span>Reinvestment</button>
+    <button class="nav-btn" onclick="showPage('capitalRecovery', this)"><span class="nav-icon">💰</span>Capital Recovery</button>
+    <button class="nav-btn" onclick="showPage('history', this)"><span class="nav-icon">📚</span>Cropping History</button>
+    <button class="nav-btn" onclick="showPage('printReport', this)"><span class="nav-icon">📤</span>Export Report</button>
+    <button class="nav-btn" onclick="showPage('records', this)"><span class="nav-icon">🗂️</span>Records</button>
+
+    <div class="theme-box">
+      <button class="theme-btn" onclick="toggleTheme()" id="themeButton">🌙 Night Mode</button>
+      <button class="theme-btn" style="margin-top:7px;" onclick="toggleSettings()" id="settingsButton">⚙️ Settings</button>
+      <div id="settingsPanel" class="settings-panel">
+        <div class="settings-item"><strong>🧹 Clear All Sample Data</strong><span>Remove only demo/sample transactions and records. Your real data is kept.</span><button class="btn btn-danger" style="width:100%;margin-top:7px;" onclick="clearAllDemoData()">Clear All Sample Data</button></div>
+        <div class="settings-item"><strong>💾 Export Backup</strong><span>Download your current app data as a backup file.</span><button class="btn btn-secondary" style="width:100%;margin-top:7px;" onclick="backupData()">Export Backup</button></div>
+        <div class="settings-item"><strong>📥 Import Backup</strong><span>Restore your app data from a backup file.</span><button class="btn btn-secondary" style="width:100%;margin-top:7px;" onclick="document.getElementById('backupFileInput').click()">Import Backup</button><input id="backupFileInput" type="file" accept=".json,application/json" style="display:none" onchange="importBackupFile(this)"></div>
+      </div>
+    </div>
+  </aside>
+
+
+  <!-- ======================================================
+       MAIN
+  ======================================================= -->
+
+  <main class="main">
+
+
+    <!-- ====================================================
+         DASHBOARD
+    ===================================================== -->
+
+    <section id="dashboard" class="page active">
+
+      <div class="page-header">
+        <h2>📊 Dashboard</h2>
+        <p>Current financial position of the fish pen</p>
+      </div>
+
+      <div class="section">
+
+        <div class="section-title">
+          <h3>💰 Current Cash & Capital</h3>
+        </div>
+
+        <div class="cards">
+
+          <div class="card">
+            <div class="label">Available Cash</div>
+            <div class="value" id="dashCash">₱0.00</div>
+          </div>
+
+          <div class="card dashboard-collapsible-card" onclick="toggleDashboardDetail('netProfitDetails', this)">
+            <div class="label dashboard-detail-toggle">Net Profit</div>
+            <div class="value" id="dashProfit">₱0.00</div>
+            <div id="netProfitDetails" class="dashboard-detail hidden"></div>
+          </div>
+
+          <div class="card dashboard-collapsible-card" onclick="toggleDashboardDetail('originalCapitalDetails', this)">
+            <div class="label dashboard-detail-toggle">Original Capital</div>
+            <div class="value" id="dashCapital">₱0.00</div>
+            <div id="originalCapitalDetails" class="dashboard-detail hidden"></div>
+          </div>
+
+          <div class="card dashboard-collapsible-card" onclick="toggleDashboardDetail('capitalRecoveredDetails', this)">
+            <div class="label dashboard-detail-toggle">Capital Recovered</div>
+            <div class="value" id="dashRecovered">₱0.00</div>
+            <div id="capitalRecoveredDetails" class="dashboard-detail hidden"></div>
+          </div>
+
+          <div class="card">
+            <div class="label">Capital Still to Recover</div>
+            <div class="value" id="dashStill">₱0.00</div>
+            <div id="dashCapitalStatus" class="status status-info" style="margin-top:8px;display:inline-block;">Still Need to Recover</div>
+          </div>
+
+          <div class="card dashboard-collapsible-card" onclick="toggleDashboardDetail('reinvestmentDetails', this)">
+            <div class="label dashboard-detail-toggle">Reinvestment</div>
+            <div class="value" id="dashReinvestment">₱0.00</div>
+            <div id="reinvestmentDetails" class="dashboard-detail hidden"></div>
+          </div>
+
+          <div class="card">
+            <div class="label">Outstanding Debt</div>
+            <div class="value" id="dashDebt">₱0.00</div>
+          </div>
+
+          <div class="card">
+            <div class="label">Net Financial Position</div>
+            <div class="value" id="dashNet">₱0.00</div>
+          </div>
+
+        </div>
+
+      </div>
+
+      <div class="section">
+
+        <div class="section-title">
+          <h3>💵 Money Position</h3>
+        </div>
+
+        <div class="cards">
+
+          <div class="card">
+            <div class="label">Total Money In</div>
+            <div class="value" id="dashMoneyIn">₱0.00</div>
+          </div>
+
+          <div class="card">
+            <div class="label">Total Money Out</div>
+            <div class="value" id="dashMoneyOut">₱0.00</div>
+          </div>
+
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- ====================================================
+         CROPPINGS
+    ===================================================== -->
+
+    <section id="croppings" class="page">
+
+      <div class="page-header">
+        <h2>🐟 Croppings</h2>
+        <p>Select the active cropping</p>
+      </div>
+
+      <div class="section">
+
+        <div class="form-group">
+
+          <label>Active Cropping</label>
+
+          <select id="globalCropping" onchange="croppingChanged()">
+            <option value="">All Croppings</option>
+          </select>
+
+        </div>
+
+        <div id="croppingInfo" style="margin-top:18px;"></div>
+
+      </div>
+
+    </section>
+
+
+    <!-- ====================================================
+         TRANSACTIONS
+    ===================================================== -->
+
+    <section id="transactions" class="page">
+
+      <div class="page-header">
+        <h2>💳 Transactions</h2>
+        <p>Record all business money coming in and going out</p>
+      </div>
+
+      <div class="section">
+
+        <div class="section-title">
+          <h3>➕ Add Transaction</h3>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group"><label>Transaction ID</label><input id="transactionID" type="text" readonly placeholder="Automatic — generated when saved"></div>
+          <div class="form-group"><label>Date</label><input id="transactionDate" type="date"></div>
+          <div class="form-group"><label>Cropping ID</label><input id="transactionCroppingID" type="text" readonly placeholder="Automatic"></div>
+          
+          <div class="form-group"><label>Type</label><select id="transactionType"><option value="">Select Type</option><option value="In">In</option><option value="Out">Out</option></select></div>
+          <div class="form-group"><label>Category</label><select id="transactionCategory" onchange="toggleOtherCategory()"><option value="">Select Category</option><option value="Caretaker">Caretaker</option><option value="Capital">Capital</option><option value="Legal Requirements">Legal Requirements</option><option value="Maintenance">Maintenance</option><option value="Operation">Operation</option><option value="Other">Other</option><option value="Production">Production</option><option value="Reinvestment">Reinvestment</option></select></div>
+          <div class="form-group" id="transactionOtherCategoryGroup" style="display:none;"><label>Other Category</label><input id="transactionOtherCategory" type="text" placeholder="Enter category"></div>
+          <div class="form-group"><label>Sub category</label><select id="transactionExpenseType" onchange="toggleOtherExpenseType()"><option value="">Select Sub category</option><option value="Additional Capital">Additional Capital</option><option value="Bamboo">Bamboo</option><option value="Cigarette">Cigarette</option><option value="Feeds">Feeds</option><option value="Fingerlings">Fingerlings</option><option value="Gasoline">Gasoline</option><option value="Harvest Labor">Harvest Labor</option><option value="Labor">Labor</option><option value="Nets">Nets</option><option value="Original Capital">Original Capital</option><option value="Other">Other</option><option value="Rice">Rice</option><option value="Salary">Salary</option></select></div>
+          <div class="form-group" id="transactionOtherExpenseGroup" style="display:none;"><label>Other Sub category</label><input id="transactionOtherExpenseType" type="text" placeholder="Enter sub category"></div>
+          <div class="form-group"><label>Amount</label><input id="transactionAmount" type="number" min="0" step="0.01" placeholder="0.00"></div>
+          <div class="form-group"><label>Payment Method</label><select id="transactionPaymentMethod"><option value="">Select Payment Method</option><option value="Cash">Cash</option><option value="Debt">Debt</option></select></div>
+          <div class="form-group"><label>Description</label>
+            <select id="transactionDescriptionType" onchange="toggleOtherDescription()">
+              <option value="">Select Description</option>
+              <option value="Feeds Fund">Feeds Fund</option><option value="Fixed">Fixed</option><option value="Other">Other</option>
+            </select>
+          </div>
+          <div class="form-group" id="transactionOtherDescriptionGroup" style="display:none;"><label>Other Description</label><input id="transactionNotes" type="text" placeholder="Enter description"></div>
+        </div>
+
+        <div class="button-row">
+          <button class="btn btn-primary" onclick="saveTransaction()">+ Save Transaction</button>
+          <button class="btn btn-secondary" onclick="resetTransactionForm()">Clear</button>
+          <button class="btn btn-danger" onclick="saveTransaction()">Save Transaction</button>
+        </div>
+
+        <div id="transactionMessage" class="status status-info" style="margin-top:13px;"></div>
+      </div>
+
+      <div class="section">
+        <div class="section-title"><h3>📋 Transaction History</h3></div>
+        <div id="transactionsTable"></div>
+      </div>
+
+    </section>
+
+
+    <!-- ====================================================
+         HARVEST
+    ===================================================== -->
+
+    <section id="harvest" class="page">
+
+      <div class="page-header">
+        <h2>⚖️ Harvest</h2>
+        <p>Temporary harvest weighing and delivery checking area</p>
+      </div>
+
+      <div id="harvestStatus" class="status status-info">
+        Select a cropping first.
+      </div>
+
+
+      <!-- HARVEST WEIGHING -->
+
+      <div class="section">
+
+        <div
+          class="section-title collapse-head"
+          onclick="toggleCollapse('weighingBody', this)">
+
+          <h3>⚖️ Harvest – Weighing Area</h3>
+
+        </div>
+
+        <div id="weighingBody" class="collapse-body">
+
+          <div class="pullout-note">
+            Add a separate entry whenever the fish size,
+            kilo per box, or price per kilo is different.
+            Use <b>+</b> and <b>−</b> to count boxes.
+            Use <b>Loose</b> for fish that does not make one full box.
+          </div>
+
+          <div id="harvestEntries"></div>
+
+          <div class="button-row">
+
+            <button class="btn btn-primary"
+              onclick="addHarvestEntry()">
+              + Add Fish / Kilo per Box
+            </button>
+
+            <button class="btn btn-secondary undo-small"
+              onclick="undoLastAction()">
+              ↶ Undo
+            </button>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- CURRENT BOX COUNT -->
+
+      <div class="section">
+
+        <div
+          class="section-title collapse-head"
+          onclick="toggleCollapse('boxCountBody', this)">
+
+          <h3>📦 Current Box Count</h3>
+
+          <span class="collapse-arrow">▼</span>
+
+        </div>
+
+        <div id="boxCountBody" class="collapse-body">
+
+          <div id="currentBoxTable"></div>
+
+        </div>
+
+      </div>
+
+
+      <!-- CURRENT HARVEST TOTAL -->
+
+      <div class="section">
+
+        <div class="section-title">
+          <h3>📊 Current Harvest Total</h3>
+        </div>
+
+        <div class="cards">
+
+          <div class="card">
+            <div class="label">Total Boxes</div>
+            <div class="value" id="harvestTotalBoxes">0</div>
+          </div>
+
+          <div class="card">
+            <div class="label">Total Kilos</div>
+            <div class="value" id="harvestTotalKilos">0.00 kg</div>
+          </div>
+
+          <div class="card">
+            <div class="label">Total Sales</div>
+            <div class="value" id="harvestTotalSales">₱0.00</div>
+          </div>
+
+          <div class="card">
+            <div class="label">5% Deduction</div>
+            <div class="value" id="harvestDeduction">₱0.00</div>
+          </div>
+
+          <div class="card">
+            <div class="label">Net Income</div>
+            <div class="value" id="harvestNet">₱0.00</div>
+          </div>
+
+          <div class="card">
+            <div class="label">Cash Advance</div>
+            <div class="value" id="harvestCashAdvance">₱0.00</div>
+          </div>
+
+          <div class="card">
+            <div class="label">Buyer Remaining</div>
+            <div class="value" id="harvestBuyerRemaining">₱0.00</div>
+          </div>
+
+        </div>
+
+        <div class="pullout-note" style="margin-top:15px;">
+          <b>Important:</b> Pulling out boxes does NOT change these totals.
+          These are the original/current harvest totals. Only the
+          <b>Current Box Count</b> changes when boxes are pulled out.
+        </div>
+
+      </div>
+
+
+      <!-- BUYER -->
+
+      <div class="section">
+
+        <div class="section-title">
+          <h3>👤 Harvest Buyer Information</h3>
+        </div>
+
+        <div class="form-grid">
+
+          <div class="form-group">
+            <label>Buyer</label>
+            <input id="buyerName" type="text" placeholder="Buyer name">
+          </div>
+
+          <div class="form-group">
+            <label>Cash Advance</label>
+            <input id="buyerCashAdvance" type="number"
+              min="0" step="0.01" placeholder="0.00"
+              oninput="updateHarvestTotals()">
+          </div>
+
+          <div class="form-group">
+            <label>Buyer Remaining Balance</label>
+            <input id="buyerRemaining" type="number"
+              min="0" step="0.01" placeholder="0.00"
+              readonly>
+          </div>
+
+        </div>
+
+        <div class="form-group" style="margin-top:13px;">
+          <label>Harvest Note</label>
+          <textarea id="harvestNote"
+            placeholder="Optional harvest note"></textarea>
+        </div>
+
+        <div class="button-row">
+
+          <button class="btn btn-primary"
+            onclick="saveBuyerInfo()">
+            Save Buyer Information
+          </button>
+
+        </div>
+
+      </div>
+
+
+      <!-- PULL OUT -->
+
+      <div class="section">
+
+        <div class="section-title">
+          <h3>🚚 Pull Out / Delivery Checking</h3>
+        </div>
+
+        <div class="pullout-box">
+
+          <div class="pullout-note">
+            Pull-out records are separate from the Current Harvest Total.
+            Example: if you have 100 boxes and pull out 50, the Current
+            Box Count becomes 50, but Total Boxes, Total Kilos, Total Sales,
+            5% Deduction, Net Income, Cash Advance and Buyer Remaining
+            remain based on the original harvest.
+          </div>
+
+          <div class="form-grid">
+
+            <div class="form-group">
+              <label>Fish Size</label>
+              <select id="pullFishSize">
+                <option value="">Select Fish Size</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>Kilo per Box</label>
+              <select id="pullKiloPerBox">
+                <option value="">Select Kilo / Box</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>Boxes to Pull Out</label>
+              <input id="pullBoxes" type="number"
+                min="1" step="1" placeholder="0">
+            </div>
+
+            <div class="form-group">
+              <label>Note</label>
+              <input id="pullNote" type="text"
+                placeholder="e.g. Delivery 1">
+            </div>
+
+          </div>
+
+          <div class="button-row">
+
+            <button class="btn btn-primary"
+              onclick="pullOutBoxes()">
+              🚚 Pull Out Boxes
+            </button>
+
+          </div>
+
+        </div>
+
+        <div style="margin-top:20px;">
+          <h4 style="margin:0 0 10px;">📋 Pull Out History</h4>
+          <div id="pullOutHistory"></div>
+        </div>
+
+      </div>
+
+
+      <!-- COMPLETE -->
+
+      <div class="section">
+
+        <div class="button-row">
+
+          <button class="btn btn-success"
+            onclick="completeHarvest()">
+            ✓ Harvest Completed
+          </button>
+
+          <button class="btn btn-secondary"
+            onclick="clearTemporaryHarvest()">
+            🗑 Clear Temporary Harvest
+          </button>
+
+        </div>
+
+        <div id="completeStatus"
+          class="status status-info"
+          style="margin-top:13px;">
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- ====================================================
+         HARVEST RECORDS
+    ===================================================== -->
+
+    <section id="harvestRecords" class="page">
+
+      <div class="page-header">
+        <h2>📋 Harvest Records</h2>
+        <p>Permanent completed harvest records</p>
+      </div>
+
+      <div class="section">
+        <div id="harvestRecordsTable"></div>
+      </div>
+
+    </section>    <!-- ====================================================
+         EXPENSES
+    ===================================================== -->
+    <section id="expenses" class="page">
+      <div class="page-header">
+        <h2>💸 Expenses</h2>
+        <p>Automatically connected to the Transaction tab. All OUT transactions are shown here except Caretaker, Capital, and Reinvestment.</p>
+      </div>
+      <div class="section">
+        <div class="section-title"><h3>📋 Expense Transactions</h3></div>
+        <div id="expenseTable"></div>
+      </div>
+    </section>
+
+    <!-- ====================================================
+         CARETAKER
+    ===================================================== -->
+    <section id="caretaker" class="page">
+      <div class="page-header">
+        <h2>👤 Caretaker</h2>
+        <p>Automatically connected to the Transaction tab. All transactions with Category = Caretaker are shown here.</p>
+      </div>
+      <div class="section">
+        <div class="section-title"><h3>📋 Caretaker Transactions</h3></div>
+        <div id="caretakerTable"></div>
+      </div>
+    </section>
+
+
+    <!-- ====================================================
+         REINVESTMENT
+    ===================================================== -->
+
+    <section id="reinvestment" class="page">
+
+      <div class="page-header">
+        <h2>🔄 Reinvestment</h2>
+        <p>Reinvestment records</p>
+      </div>
+
+      <div class="section">
+        <div id="reinvestmentTable"></div>
+      </div>
+
+    </section>
+
+
+    <!-- ====================================================
+         CAPITAL RECOVERY
+    ===================================================== -->
+
+    <section id="capitalRecovery" class="page">
+
+      <div class="page-header">
+        <h2>💰 Capital Recovery</h2>
+        <p>Record recovered capital</p>
+      </div>
+
+      <div class="section">
+
+        <div class="form-grid">
+
+          <div class="form-group">
+            <label>Recovery Date</label>
+            <input type="date" id="recoveryDate">
+          </div>
+
+          <div class="form-group">
+            <label>Partner</label>
+            <input type="text" id="recoveryPartner">
+          </div>
+
+          <div class="form-group">
+            <label>Recovery Amount</label>
+            <input type="number" id="recoveryAmount"
+              min="0" step="0.01">
+          </div>
+
+          <div class="form-group">
+            <label>Notes</label>
+            <input type="text" id="recoveryNotes">
+          </div>
+
+        </div>
+
+        <div class="button-row">
+
+          <button class="btn btn-primary"
+            onclick="saveCapitalRecovery()">
+            + Record Capital Recovery
+          </button>
+
+        </div>
+
+        <div id="recoveryMessage"
+          class="status status-info"
+          style="margin-top:13px;">
+        </div>
+
+      </div>
+
+      <div class="section">
+        <div id="capitalRecoveryTable"></div>
+      </div>
+
+    </section>
+
+
+    <!-- ====================================================
+         HISTORY
+    ===================================================== -->
+
+    <section id="history" class="page">
+
+      <div class="page-header">
+        <h2>📚 Cropping History</h2>
+        <p>Completed cropping records — automatically connected from Transactions and Harvest Records</p>
+      </div>
+
+      <div class="section">
+        <div id="historyTable"></div>
+      </div>
+
+    </section>
+
+    <!-- ====================================================
+         PRINT REPORT
+    ===================================================== -->
+    <section id="printReport" class="page">
+      <div class="page-header">
+        <h2>📤 Export Report</h2>
+        <p>View and export the current cropping report</p>
+      </div>
+      <div class="section no-print">
+        <div class="form-grid" style="max-width:760px;margin:0 auto;">
+          <div class="form-group">
+            <label>10% Deduction / Caretaker Share</label>
+            <input id="reportDeductionPercent" type="number" min="0" max="100" step="0.01" value="10" onchange="saveReportDeductionPercent()">
+          </div>
+        </div>
+        <div class="report-toolbar" style="justify-content:center;margin-top:12px;">
+          <button class="btn btn-primary" onclick="openReportModal('caretaker')">View Caretaker</button>
+          <button class="btn btn-primary" onclick="openReportModal('cropping')">View Cropping Transactions</button>
+        </div>
+      </div>
+      <div id="printReportContent" class="report-print-area"><div class="empty">Choose a report above.</div></div>
+    </section>
+
+    <!-- FLOATING REPORT VIEW -->
+    <div id="reportModal" class="report-modal hidden" onclick="closeReportModal(event)">
+      <div class="report-paper" onclick="event.stopPropagation()">
+        <div class="report-modal-toolbar no-print">
+          <button class="btn btn-secondary" onclick="closeReportModal()">Close</button>
+          <button class="btn btn-primary" onclick="printReportPaper()">🖨️ Print</button>
+          <button class="btn btn-secondary report-download" onclick="downloadCurrentReportPDF()">📄 Download PDF</button>
+        </div>
+        <div id="reportModalContent"></div>
+      </div>
+    </div>
+
+    <!-- RECORDS -->
+    <section id="records" class="page">
+      <div class="page-header">
+        <h2>🗂️ Records</h2>
+        <p>Transaction and harvest records automatically connected to the tracker</p>
+      </div>
+
+      <div class="section no-print">
+        <div class="form-group" style="max-width:360px;margin:0 auto;">
+          <label>Select Cropping</label>
+          <select id="recordsCropping" onchange="loadRecords()"><option value="">All Croppings</option></select>
+        </div>
+        <div class="report-toolbar" style="justify-content:center;margin-top:14px;gap:8px;">
+          <button class="btn btn-primary" onclick="openRecordsPDFView()">👁️ View PDF</button>
+          <button class="btn btn-secondary" onclick="printRecordsPaper()">🖨️ Print</button>
+          <button class="btn btn-secondary" onclick="downloadRecordsPDF()">📄 Download PDF</button>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title"><h3>📊 Records Summary</h3></div>
+        <div class="cards" id="recordsSummaryCards">
+          <div class="card"><div class="label">Total Money In</div><div class="value" id="recordsTotalMoneyIn">₱0.00</div></div>
+          <div class="card"><div class="label">Total Money Out</div><div class="value" id="recordsTotalMoneyOut">₱0.00</div></div>
+          <div class="card"><div class="label">Total Reinvestment</div><div class="value" id="recordsTotalReinvestment">₱0.00</div></div>
+          <div class="card"><div class="label">Net Income</div><div class="value" id="recordsNetIncome">₱0.00</div></div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title"><h3>💰 Transaction Records</h3></div>
+        <div id="transactionRecordsContent"><div class="empty">Loading transaction records...</div></div>
+      </div>
+
+      <div class="section">
+        <div class="section-title"><h3>🐟 Harvest Records</h3></div>
+        <div id="harvestRecordsContent"><div class="empty">Loading harvest records...</div></div>
+      </div>
+    </section>
+
+    <!-- RECORDS PDF VIEW -->
+    <div id="recordsPdfModal" class="report-modal hidden" onclick="closeRecordsPDFView(event)">
+      <div class="report-paper report-portrait" onclick="event.stopPropagation()">
+        <div class="report-modal-toolbar no-print">
+          <button class="btn btn-secondary" onclick="closeRecordsPDFView()">Close</button>
+          <button class="btn btn-primary" onclick="printRecordsPaper()">🖨️ Print</button>
+          <button class="btn btn-secondary report-download" onclick="downloadRecordsPDF()">📄 Download PDF</button>
+        </div>
+        <div id="recordsPdfContent"></div>
+      </div>
+    </div>
+
+  </main>
+
+</div>
+
+
+<script>
+
+/* ==========================================================
+   GLOBAL
+========================================================== */
+
+let selectedCropping = "";
+let harvestEntries = [];
+let actionHistory = [];
+let pullOutHistory = [];
+let currentReportType = "cropping";
+
+let collapsed = {};
+
+
+/* ==========================================================
+   MONEY
+========================================================== */
+
+function money(value) {
+
+  const n = Number(value) || 0;
+
+  return "₱" + n.toLocaleString("en-PH", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
+
+}
+
+
+/* ==========================================================
+   ESCAPE HTML
+========================================================== */
+
+function escapeHTML(value) {
+
+  if (value === null || value === undefined) return "";
+
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+
+}
+
+
+
+function toggleSidebar() {
+  const sidebar = document.querySelector('.sidebar');
+  const app = document.querySelector('.app');
+  if (!sidebar || !app) return;
+  sidebar.classList.toggle('collapsed');
+  app.classList.toggle('sidebar-collapsed');
+  localStorage.setItem('fishPenSidebarCollapsed', sidebar.classList.contains('collapsed') ? '1' : '0');
+}
+
+function restoreSidebarState() {
+  if (localStorage.getItem('fishPenSidebarCollapsed') === '1') {
+    const sidebar = document.querySelector('.sidebar');
+    const app = document.querySelector('.app');
+    if (sidebar && app) { sidebar.classList.add('collapsed'); app.classList.add('sidebar-collapsed'); }
+  }
+}
+
+function updatePageCroppingLabels() {
+  const label = selectedCropping ? "Cropping: " + selectedCropping : "Cropping: All Croppings";
+  document.querySelectorAll(".page:not(#dashboard)").forEach(function(page) {
+    let el = page.querySelector(".page-cropping-name");
+    if (!el) {
+      el = document.createElement("div");
+      el.className = "page-cropping-name";
+      const header = page.querySelector(".page-header");
+      if (header) header.insertAdjacentElement("afterend", el);
+      else page.insertBefore(el, page.firstChild);
+    }
+    el.textContent = label;
+  });
+}
+
+function globalCroppingChanged(value) {
+  selectedCropping = String(value || '').trim();
+  const mainSelect = document.getElementById('globalCropping');
+  const topSelect = document.getElementById('globalCroppingTop');
+  if (mainSelect) mainSelect.value = selectedCropping;
+  if (topSelect) topSelect.value = selectedCropping;
+  const recordsSelect=document.getElementById('recordsCropping'); if(recordsSelect) recordsSelect.value=selectedCropping;
+  localStorage.setItem('fishPenSelectedCropping', selectedCropping);
+  updatePageCroppingLabels();
+  try { croppingChanged(true); } catch (e) { console.error(e); }
+  refreshAllPagesForCropping();
+}
+
+function refreshAllPagesForCropping() {
+  try { loadDashboard(); } catch(e) {}
+  try { loadTransactionsPage(); } catch(e) {}
+  try { loadExpenses(); } catch(e) {}
+  try { loadCaretaker(); } catch(e) {}
+  try { loadReinvestment(); } catch(e) {}
+  try { loadCapitalRecoveryPage(); } catch(e) {}
+  try { loadHistory(); } catch(e) {}
+  try { loadPrintReport(); } catch(e) {}
+  try { loadRecords(); } catch(e) {}
+}
+
+function syncCroppingSelectors() {
+  const saved = localStorage.getItem('fishPenSelectedCropping') || '';
+  const a = document.getElementById('globalCropping');
+  const b = document.getElementById('globalCroppingTop');
+  if (a) a.value = saved;
+  if (b) b.value = saved;
+  selectedCropping = saved;
+  const r = document.getElementById('recordsCropping'); if (r) r.value = saved;
+  updatePageCroppingLabels();
+}
+
+
+/* ==========================================================
+   NAVIGATION
+========================================================== */
+
+function showPage(pageID, button) {
+
+  try {
+    var pages = document.querySelectorAll(".page");
+    for (var i = 0; i < pages.length; i++) {
+      pages[i].classList.remove("active");
+    }
+
+    var page = document.getElementById(pageID);
+    if (!page) {
+      console.error("Fish Pen Tracker: page not found:", pageID);
+      return false;
+    }
+
+    page.classList.add("active");
+
+    var buttons = document.querySelectorAll(".nav-btn");
+    for (var j = 0; j < buttons.length; j++) {
+      buttons[j].classList.remove("active");
+    }
+
+    if (button) button.classList.add("active");
+
+    // Page switching must never be blocked by a data-loading error.
+    try {
+      if (pageID === "dashboard") loadDashboard();
+      else if (pageID === "transactions") loadTransactionsPage();
+      else if (pageID === "harvest") {
+        if (selectedCropping) loadTemporaryHarvest();
+      }
+      else if (pageID === "harvestRecords") loadHarvestRecordsPage();
+      else if (pageID === "expenses") { prepareExpenseForm(); loadExpenses(); }
+      else if (pageID === "caretaker") { prepareCaretakerForm(); loadCaretaker(); }
+      else if (pageID === "reinvestment") loadReinvestment();
+      else if (pageID === "capitalRecovery") loadCapitalRecoveryPage();
+      else if (pageID === "history") loadHistory();
+      else if (pageID === "printReport") loadPrintReport();
+      else if (pageID === "records") loadRecords();
+    } catch (loaderError) {
+      console.error("Fish Pen Tracker page loader error:", loaderError);
+    }
+
+    return false;
+  } catch (error) {
+    console.error("Fish Pen Tracker navigation error:", error);
+    return false;
+  }
+}
+
+
+/* ==========================================================
+   THEME
+========================================================== */
+
+function toggleTheme() {
+
+  document.body.classList.toggle("night");
+
+  const night =
+    document.body.classList.contains("night");
+
+  localStorage.setItem(
+    "fishPenTheme",
+    night ? "night" : "day"
+  );
+
+  document.getElementById("themeButton").textContent =
+    night ? "☀️ Day Mode" : "🌙 Night Mode";
+
+}
+
+
+function loadTheme() {
+
+  const saved =
+    localStorage.getItem("fishPenTheme");
+
+  if (saved === "night") {
+
+    document.body.classList.add("night");
+
+    document.getElementById("themeButton").textContent =
+      "☀️ Day Mode";
+
+  }
+
+}
+
+
+/* ==========================================================
+   COLLAPSE
+========================================================== */
+
+function toggleCollapse(id, header) {
+
+  const body = document.getElementById(id);
+
+  if (!body) return;
+
+  body.classList.toggle("hidden");
+
+  header.classList.toggle("closed");
+
+}
+
+
+/* ==========================================================
+   LOAD CROPPINGS
+========================================================== */
+
+function loadCroppings() {
+
+  google.script.run
+
+    .withSuccessHandler(function(data) {
+
+      const select =
+        document.getElementById("globalCropping");
+
+      select.innerHTML =
+        '<option value="">All Croppings</option>';
+
+      (data || []).forEach(function(id) {
+
+        const option =
+          document.createElement("option");
+
+        option.value = id;
+        option.textContent = id;
+
+        select.appendChild(option);
+
+      });
+      const top=document.getElementById("globalCroppingTop");
+      if(top){ top.innerHTML='<option value="">All Croppings</option>'; (data||[]).forEach(function(id){const o=document.createElement('option');o.value=id;o.textContent=id;top.appendChild(o);}); }
+      const rec=document.getElementById("recordsCropping");
+      if(rec){ rec.innerHTML='<option value="">All Croppings</option>'; (data||[]).forEach(function(id){const o=document.createElement('option');o.value=id;o.textContent=id;rec.appendChild(o);}); }
+      syncCroppingSelectors();
+
+    })
+
+    .withFailureHandler(function(error) {
+
+      console.error(error);
+
+    })
+
+    .getCroppings();
+
+}
+
+
+/* ==========================================================
+   CROPPING CHANGED
+========================================================== */
+
+function croppingChanged(fromGlobal) {
+  const select = document.getElementById("globalCropping");
+  if (select) selectedCropping = select.value || "";
+  const top = document.getElementById("globalCroppingTop");
+  if (top) top.value = selectedCropping;
+  localStorage.setItem("fishPenSelectedCropping", selectedCropping);
+
+  if (!selectedCropping) {
+    const info = document.getElementById("croppingInfo");
+    if (info) info.innerHTML = "";
+    resetHarvestUI();
+    return;
+  }
+
+  loadCroppingInfo();
+  loadTemporaryHarvest();
+}
+
+
+/* ==========================================================
+   CROPPING INFO
+========================================================== */
+
+function loadCroppingInfo() {
+
+  google.script.run
+
+    .withSuccessHandler(function(data) {
+
+      document.getElementById("croppingInfo").innerHTML = `
+
+        <div class="cards">
+
+          <div class="card">
+            <div class="label">Sales</div>
+            <div class="small-value">${money(data.sales)}</div>
+          </div>
+
+          <div class="card">
+            <div class="label">Production Expense</div>
+            <div class="small-value">${money(data.production)}</div>
+          </div>
+
+          <div class="card">
+            <div class="label">Operation Expense</div>
+            <div class="small-value">${money(data.operation)}</div>
+          </div>
+
+          <div class="card">
+            <div class="label">Net Profit</div>
+            <div class="small-value">${money(data.profit)}</div>
+          </div>
+
+        </div>
+
+      `;
+
+    })
+
+    .getCroppingData(selectedCropping);
+
+}
+
+
+/* ==========================================================
+   TEMPORARY HARVEST
+========================================================== */
+
+function loadTemporaryHarvest() {
+
+  if (!selectedCropping) return;
+
+  google.script.run
+
+    .withSuccessHandler(function(data) {
+
+      harvestEntries =
+        data.entries || [];
+
+      actionHistory = [];
+
+      document.getElementById("buyerName").value =
+        data.buyer || "";
+
+      document.getElementById("buyerCashAdvance").value =
+        data.cashAdvance || "";
+
+      document.getElementById("buyerRemaining").value =
+        data.buyerRemaining || "";
+
+      document.getElementById("harvestNote").value =
+        data.note || "";
+
+      renderHarvestEntries();
+
+      renderCurrentBoxTable();
+
+      renderPullOutHistory(data.pullOuts || []);
+
+      updateHarvestTotals();
+
+      updatePullOutSelects();
+
+      document.getElementById("harvestStatus").className =
+        "status status-success";
+
+      document.getElementById("harvestStatus").textContent =
+        "Active cropping: " + selectedCropping;
+
+    })
+
+    .withFailureHandler(function(error) {
+
+      console.error(error);
+
+      document.getElementById("harvestStatus").className =
+        "status status-error";
+
+      document.getElementById("harvestStatus").textContent =
+        error.message || "Unable to load harvest.";
+
+    })
+
+    .getTemporaryHarvest(selectedCropping);
+
+}
+
+
+/* ==========================================================
+   ADD HARVEST ENTRY
+========================================================== */
+
+function addHarvestEntry() {
+
+  if (!selectedCropping) {
+
+    alert("Please select a cropping first.");
+
+    return;
+
+  }
+
+  const entry = {
+
+    id: "E" + Date.now(),
+
+    fishSize: "",
+
+    kiloPerBox: 0,
+
+    pricePerKilo: 0,
+
+    boxes: 0,
+
+    loose: 0,
+
+    loosePrice: 0
+
+  };
+
+  harvestEntries.push(entry);
+  harvestOpenSizeEntries[entry.id] = true;
+
+  actionHistory.push({
+    type: "addEntry",
+    entry: JSON.parse(JSON.stringify(entry))
+  });
+
+  renderHarvestEntries();
+
+  saveTemporaryHarvest();
+
+}
+
+
+/* ==========================================================
+   RENDER HARVEST ENTRIES
+========================================================== */
+
+// Keeps each fish-size section open while information is being entered.
+var harvestOpenSizeEntries = {};
+
+function renderHarvestEntries() {
+  const container = document.getElementById("harvestEntries");
+  if (!harvestEntries.length) {
+    container.innerHTML = '<div class="empty">No weighing entries yet. Click "+ Add Fish / Kilo per Box".</div>';
+    return;
+  }
+  let html = '';
+  harvestEntries.forEach(function(entry, index) {
+    const fish = entry.fishSize || 'New Fish Entry';
+    const kilo = Number(entry.kiloPerBox) || 0;
+    const price = Number(entry.pricePerKilo) || 0;
+    const boxes = Number(entry.boxes) || 0;
+    const loose = Number(entry.loose) || 0;
+    const kilos = boxes * kilo + loose;
+    const amount = kilos * price;
+    const bodyId = 'harvestSizeDetail_' + index;
+    if (!Object.prototype.hasOwnProperty.call(harvestOpenSizeEntries, entry.id)) {
+      harvestOpenSizeEntries[entry.id] = true;
+    }
+    const detailClass = harvestOpenSizeEntries[entry.id] ? 'harvest-size-detail' : 'harvest-size-detail hidden';
+    html += '<div class="harvest-size-entry">';
+    html += '<div class="harvest-size-summary" onclick="toggleHarvestSize(\''+bodyId+'\')">';
+    html += '<strong>'+escapeHTML(fish)+'</strong>';
+    html += '<span class="harvest-kilo-summary"><b>'+kilo+'</b></span>';
+    html += '<div class="counter" onclick="event.stopPropagation()"><button onclick="changeBoxes('+index+',-1)">−</button><div class="count">'+boxes+'</div><button onclick="changeBoxes('+index+',1)">+</button></div>';
+    html += '<button class="btn btn-danger btn-small" onclick="event.stopPropagation();removeEntry('+index+')">Remove</button>';
+    html += '</div>';
+    html += '<div id="'+bodyId+'" class="'+detailClass+'">';
+    html += '<div class="form-grid">';
+    html += '<div class="form-group"><label>Fish Size</label><select onchange="updateEntry('+index+', \'fishSize\', this.value)"><option value="">Select Fish Size</option><option value="OS" '+(String(fish).toUpperCase()==='OS'?'selected':'')+'>OS</option><option value="2-1" '+(fish==='2-1'?'selected':'')+'>2-1</option><option value="5-2" '+(fish==='5-2'?'selected':'')+'>5-2</option><option value="3-1" '+(fish==='3-1'?'selected':'')+'>3-1</option><option value="4-1" '+(fish==='4-1'?'selected':'')+'>4-1</option><option value="daing" '+(String(fish).toLowerCase()==='daing'?'selected':'')+'>Daing</option></select></div>';
+    html += '<div class="form-group"><label>Kilo per Box</label><input type="number" min="0" step="0.01" value="'+kilo+'" onchange="updateEntry('+index+', \'kiloPerBox\', this.value)"></div>';
+    html += '<div class="form-group"><label>Price per Kilo</label><input type="number" min="0" step="0.01" value="'+price+'" onchange="updateEntry('+index+', \'pricePerKilo\', this.value)"></div>';
+    html += '<div class="form-group"><label>Box Count</label><div class="counter"><button onclick="changeBoxes('+index+',-1)">−</button><div class="count">'+boxes+'</div><button onclick="changeBoxes('+index+',1)">+</button><button class="btn btn-secondary btn-small harvest-entry-undo" onclick="undoEntryBox('+index+')">Undo</button></div></div>';
+    html += '</div>';
+    html += '<div class="form-group" style="margin-top:10px;"><label>Loose</label><input type="number" min="0" step="0.01" value="'+loose+'" onchange="updateEntry('+index+', \'loose\', this.value)"></div>';
+    html += '<div style="overflow-x:auto;margin-top:12px;"><table><tr><th>Fish Size</th><th>Kilo per Box</th><th>Price per Kilo</th><th>Box Count</th><th>Loose</th></tr><tr><td>'+escapeHTML(fish)+'</td><td>'+kilo+'</td><td>'+money(price)+'</td><td>'+boxes+'</td><td>'+loose+' kg</td></tr></table></div>';
+    html += '<div class="entry-grid" style="margin-top:10px;"><div class="entry-stat"><span>TOTAL BOXES</span><strong>'+boxes+'</strong></div><div class="entry-stat"><span>LOOSE</span><strong>'+loose+' kg</strong></div><div class="entry-stat"><span>TOTAL KILOS</span><strong>'+kilos.toFixed(2)+' kg</strong></div><div class="entry-stat"><span>AMOUNT</span><strong>'+money(amount)+'</strong></div></div>';
+    html += '</div></div>';
+  });
+  container.innerHTML = html;
+}
+
+function toggleHarvestSize(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+
+  el.classList.toggle('hidden');
+
+  const match = String(id).match(/^harvestSizeDetail_(\d+)$/);
+  if (match) {
+    const index = Number(match[1]);
+    if (harvestEntries[index]) {
+      harvestOpenSizeEntries[harvestEntries[index].id] = !el.classList.contains('hidden');
+    }
+  }
+}
+
+
+/* ==========================================================
+   UPDATE ENTRY
+========================================================== */
+
+function updateEntry(index, field, value) {
+
+  if (!harvestEntries[index]) return;
+
+  const oldValue =
+    harvestEntries[index][field];
+
+  actionHistory.push({
+    type: "edit",
+    index: index,
+    field: field,
+    oldValue: oldValue
+  });
+
+  if (
+    field === "kiloPerBox" ||
+    field === "pricePerKilo" ||
+    field === "boxes" ||
+    field === "loose"
+  ) {
+
+    harvestEntries[index][field] =
+      Number(value) || 0;
+
+  } else {
+
+    harvestEntries[index][field] =
+      value;
+
+  }
+
+  renderHarvestEntries();
+
+  renderCurrentBoxTable();
+
+  updateHarvestTotals();
+
+  updatePullOutSelects();
+
+  saveTemporaryHarvest();
+
+}
+
+
+/* ==========================================================
+   CHANGE BOXES
+========================================================== */
+
+function changeBoxes(index, amount) {
+
+  if (!harvestEntries[index]) return;
+
+  const old =
+    Number(harvestEntries[index].boxes) || 0;
+
+  const next =
+    Math.max(0, old + amount);
+
+  if (next === old) return;
+
+  actionHistory.push({
+    type: "boxes",
+    index: index,
+    oldValue: old
+  });
+
+  harvestEntries[index].boxes = next;
+
+  renderHarvestEntries();
+
+  renderCurrentBoxTable();
+
+  updateHarvestTotals();
+
+  updatePullOutSelects();
+
+  saveTemporaryHarvest();
+
+}
+
+
+/* ==========================================================
+   UNDO ENTRY BOX
+========================================================== */
+
+function undoEntryBox(index) {
+
+  if (!harvestEntries[index]) return;
+
+  const old =
+    Number(harvestEntries[index].boxes) || 0;
+
+  if (old <= 0) return;
+
+  actionHistory.push({
+    type: "boxes",
+    index: index,
+    oldValue: old
+  });
+
+  harvestEntries[index].boxes =
+    old - 1;
+
+  renderHarvestEntries();
+
+  renderCurrentBoxTable();
+
+  updateHarvestTotals();
+
+  updatePullOutSelects();
+
+  saveTemporaryHarvest();
+
+}
+
+
+/* ==========================================================
+   UNDO LAST ACTION
+========================================================== */
+
+function undoLastAction() {
+
+  if (!actionHistory.length) {
+
+    alert("Nothing to undo.");
+
+    return;
+
+  }
+
+  const action =
+    actionHistory.pop();
+
+  if (action.type === "addEntry") {
+
+    const index =
+      harvestEntries.findIndex(function(e) {
+        return e.id === action.entry.id;
+      });
+
+    if (index >= 0) {
+      harvestEntries.splice(index, 1);
+    }
+
+  }
+
+  else if (action.type === "edit") {
+
+    if (harvestEntries[action.index]) {
+
+      harvestEntries[action.index][action.field] =
+        action.oldValue;
+
+    }
+
+  }
+
+  else if (action.type === "boxes") {
+
+    if (harvestEntries[action.index]) {
+
+      harvestEntries[action.index].boxes =
+        action.oldValue;
+
+    }
+
+  }
+
+  renderHarvestEntries();
+
+  renderCurrentBoxTable();
+
+  updateHarvestTotals();
+
+  updatePullOutSelects();
+
+  saveTemporaryHarvest();
+
+}
+
+
+/* ==========================================================
+   REMOVE ENTRY
+========================================================== */
+
+function removeEntry(index) {
+
+  if (!harvestEntries[index]) return;
+
+  if (!confirm(
+    "Remove this temporary weighing entry?"
+  )) return;
+
+  const removedEntryId = harvestEntries[index].id;
+  harvestEntries.splice(index, 1);
+  delete harvestOpenSizeEntries[removedEntryId];
+
+  renderHarvestEntries();
+
+  renderCurrentBoxTable();
+
+  updateHarvestTotals();
+
+  updatePullOutSelects();
+
+  saveTemporaryHarvest();
+
+}
+
+
+/* ==========================================================
+   CURRENT BOX TABLE
+========================================================== */
+
+function renderCurrentBoxTable() {
+
+  const container =
+    document.getElementById("currentBoxTable");
+
+  if (!harvestEntries.length) {
+
+    container.innerHTML =
+      '<div class="empty">No current boxes.</div>';
+
+    return;
+
+  }
+
+  let html = `
+
+    <table>
+
+      <tr>
+        <th>Fish Size</th>
+        <th>Kilo per Box</th>
+        <th>Original Boxes</th>
+        <th>Boxes Pulled Out</th>
+        <th>Current Boxes</th>
+        <th>Loose</th>
+      </tr>
+
+  `;
+
+  harvestEntries.forEach(function(entry) {
+
+    const pulled =
+      getPulledOutForEntry(entry);
+
+    const current =
+      Math.max(
+        0,
+        (Number(entry.boxes) || 0) - pulled
+      );
+
+    html += `
+
+      <tr>
+
+        <td>${escapeHTML(entry.fishSize || "-")}</td>
+
+        <td>${Number(entry.kiloPerBox || 0).toFixed(2)} kg</td>
+
+        <td>${Number(entry.boxes || 0)}</td>
+
+        <td>${pulled}</td>
+
+        <td>
+          <strong>${current}</strong>
+        </td>
+
+        <td>
+          ${Number(entry.loose || 0).toFixed(2)} kg
+        </td>
+
+      </tr>
+
+    `;
+
+  });
+
+  html += "</table>";
+
+  container.innerHTML = html;
+
+}
+
+
+/* ==========================================================
+   GET PULLED OUT FOR ENTRY
+========================================================== */
+
+function getPulledOutForEntry(entry) {
+
+  let total = 0;
+
+  pullOutHistory.forEach(function(record) {
+
+    if (
+      String(record.fishSize).trim().toLowerCase() ===
+      String(entry.fishSize).trim().toLowerCase() &&
+      Number(record.kiloPerBox) ===
+      Number(entry.kiloPerBox)
+    ) {
+
+      total += Number(record.boxes) || 0;
+
+    }
+
+  });
+
+  return total;
+
+}
+
+
+/* ==========================================================
+   HARVEST TOTALS
+   IMPORTANT:
+   NEVER USE CURRENT BOXES HERE.
+   USE ORIGINAL BOXES.
+========================================================== */
+
+function updateHarvestTotals() {
+
+  let totalBoxes = 0;
+  let totalKilos = 0;
+  let totalSales = 0;
+
+  harvestEntries.forEach(function(entry) {
+
+    const boxes =
+      Number(entry.boxes) || 0;
+
+    const kilo =
+      Number(entry.kiloPerBox) || 0;
+
+    const loose =
+      Number(entry.loose) || 0;
+
+    const price =
+      Number(entry.pricePerKilo) || 0;
+
+    totalBoxes += boxes;
+
+    const kilos =
+      (boxes * kilo) + loose;
+
+    totalKilos += kilos;
+
+    totalSales +=
+      kilos * price;
+
+  });
+
+  const deduction =
+    totalSales * 0.05;
+
+  const net =
+    totalSales - deduction;
+
+  const cashAdvance =
+    Number(
+      document.getElementById("buyerCashAdvance").value
+    ) || 0;
+
+  // Buyer Remaining = Net Income - Cash Advance.
+  const buyerRemaining = Math.max(0, net - cashAdvance);
+
+  const buyerRemainingInput = document.getElementById("buyerRemaining");
+  if (buyerRemainingInput) buyerRemainingInput.value = buyerRemaining.toFixed(2);
+
+  document.getElementById("harvestTotalBoxes").textContent =
+    totalBoxes;
+
+  document.getElementById("harvestTotalKilos").textContent =
+    totalKilos.toFixed(2) + " kg";
+
+  document.getElementById("harvestTotalSales").textContent =
+    money(totalSales);
+
+  document.getElementById("harvestDeduction").textContent =
+    money(deduction);
+
+  document.getElementById("harvestNet").textContent =
+    money(net);
+
+  document.getElementById("harvestCashAdvance").textContent =
+    money(cashAdvance);
+
+  document.getElementById("harvestBuyerRemaining").textContent =
+    money(buyerRemaining);
+
+}
+
+
+/* ==========================================================
+   SAVE BUYER
+========================================================== */
+
+function saveBuyerInfo() {
+
+  if (!selectedCropping) {
+
+    alert("Please select a cropping first.");
+
+    return;
+
+  }
+
+  saveTemporaryHarvest(function() {
+
+    const status =
+      document.getElementById("completeStatus");
+
+    status.className =
+      "status status-success";
+
+    status.textContent =
+      "Buyer information saved.";
+
+  });
+
+}
+
+
+/* ==========================================================
+   SAVE TEMPORARY HARVEST
+========================================================== */
+
+function saveTemporaryHarvest(callback) {
+
+  if (!selectedCropping) {
+
+    if (callback) callback();
+
+    return;
+
+  }
+
+  const buyer =
+    document.getElementById("buyerName").value.trim();
+
+  const cashAdvance =
+    Number(
+      document.getElementById("buyerCashAdvance").value
+    ) || 0;
+
+  const buyerRemaining =
+    Number(
+      document.getElementById("buyerRemaining").value
+    ) || 0;
+
+  const note =
+    document.getElementById("harvestNote").value.trim();
+
+  google.script.run
+
+    .withSuccessHandler(function() {
+
+      if (callback) callback();
+
+    })
+
+    .withFailureHandler(function(error) {
+
+      console.error(error);
+
+      if (callback) callback();
+
+    })
+
+    .saveTemporaryHarvest(
+      selectedCropping,
+      harvestEntries,
+      buyer,
+      cashAdvance,
+      buyerRemaining,
+      note
+    );
+
+}
+
+
+/* ==========================================================
+   PULL OUT SELECTS
+========================================================== */
+
+function updatePullOutSelects() {
+
+  const sizeSelect =
+    document.getElementById("pullFishSize");
+
+  const kiloSelect =
+    document.getElementById("pullKiloPerBox");
+
+  if (!sizeSelect || !kiloSelect) return;
+
+  const oldSize =
+    sizeSelect.value;
+
+  const oldKilo =
+    kiloSelect.value;
+
+  sizeSelect.innerHTML =
+    '<option value="">Select Fish Size</option>';
+
+  const sizes = [];
+
+  harvestEntries.forEach(function(entry) {
+
+    if (
+      entry.fishSize &&
+      !sizes.includes(entry.fishSize)
+    ) {
+
+      sizes.push(entry.fishSize);
+
+    }
+
+  });
+
+  const fishSizeOrder = ["OS", "2-1", "5-2", "3-1", "4-1", "daing"];
+
+  fishSizeOrder.forEach(function(orderedSize) {
+
+    const matchedSize = sizes.find(function(size) {
+      return String(size).toLowerCase() === String(orderedSize).toLowerCase();
+    });
+
+    if (!matchedSize) return;
+
+    const option =
+      document.createElement("option");
+
+    option.value = matchedSize;
+    option.textContent = String(matchedSize).toLowerCase() === "daing" ? "Daing" : matchedSize;
+
+    sizeSelect.appendChild(option);
+
+  });
+
+  if (sizes.includes(oldSize)) {
+    sizeSelect.value = oldSize;
+  }
+
+  kiloSelect.innerHTML =
+    '<option value="">Select Kilo / Box</option>';
+
+  const selectedSize =
+    sizeSelect.value;
+
+  harvestEntries.forEach(function(entry) {
+
+    if (
+      selectedSize &&
+      String(entry.fishSize) !==
+      String(selectedSize)
+    ) return;
+
+    if (
+      Number(entry.kiloPerBox) <= 0
+    ) return;
+
+    const exists =
+      Array.from(kiloSelect.options)
+        .some(function(option) {
+          return Number(option.value) ===
+            Number(entry.kiloPerBox);
+        });
+
+    if (!exists) {
+
+      const option =
+        document.createElement("option");
+
+      option.value =
+        entry.kiloPerBox;
+
+      option.textContent =
+        entry.kiloPerBox + " kg";
+
+      kiloSelect.appendChild(option);
+
+    }
+
+  });
+
+  if (
+    Array.from(kiloSelect.options)
+      .some(function(option) {
+        return Number(option.value) === Number(oldKilo);
+      })
+  ) {
+
+    kiloSelect.value = oldKilo;
+
+  }
+
+  sizeSelect.onchange =
+    updatePullOutKilos;
+
+}
+
+
+function updatePullOutKilos() {
+
+  const size =
+    document.getElementById("pullFishSize").value;
+
+  const kiloSelect =
+    document.getElementById("pullKiloPerBox");
+
+  kiloSelect.innerHTML =
+    '<option value="">Select Kilo / Box</option>';
+
+  harvestEntries.forEach(function(entry) {
+
+    if (
+      String(entry.fishSize) !==
+      String(size)
+    ) return;
+
+    if (
+      Number(entry.kiloPerBox) <= 0
+    ) return;
+
+    const exists =
+      Array.from(kiloSelect.options)
+        .some(function(option) {
+          return Number(option.value) ===
+            Number(entry.kiloPerBox);
+        });
+
+    if (!exists) {
+
+      const option =
+        document.createElement("option");
+
+      option.value =
+        entry.kiloPerBox;
+
+      option.textContent =
+        entry.kiloPerBox + " kg";
+
+      kiloSelect.appendChild(option);
+
+    }
+
+  });
+
+}
+
+
+/* ==========================================================
+   PULL OUT BOXES
+========================================================== */
+
+function pullOutBoxes() {
+
+  if (!selectedCropping) {
+
+    alert("Please select a cropping first.");
+
+    return;
+
+  }
+
+  const fishSize =
+    document.getElementById("pullFishSize").value;
+
+  const kiloPerBox =
+    Number(
+      document.getElementById("pullKiloPerBox").value
+    ) || 0;
+
+  const boxes =
+    Number(
+      document.getElementById("pullBoxes").value
+    ) || 0;
+
+  const note =
+    document.getElementById("pullNote").value.trim();
+
+  if (!fishSize) {
+
+    alert("Please select the fish size.");
+
+    return;
+
+  }
+
+  if (kiloPerBox <= 0) {
+
+    alert("Please select the kilo per box.");
+
+    return;
+
+  }
+
+  if (boxes <= 0) {
+
+    alert("Please enter the boxes to pull out.");
+
+    return;
+
+  }
+
+  let matchingEntry = null;
+
+  harvestEntries.forEach(function(entry) {
+
+    if (
+      String(entry.fishSize).trim().toLowerCase() ===
+      String(fishSize).trim().toLowerCase() &&
+      Number(entry.kiloPerBox) ===
+      Number(kiloPerBox)
+    ) {
+
+      matchingEntry = entry;
+
+    }
+
+  });
+
+  if (!matchingEntry) {
+
+    alert("Matching harvest entry was not found.");
+
+    return;
+
+  }
+
+  const alreadyPulled =
+    getPulledOutForEntry(matchingEntry);
+
+  const currentBoxes =
+    Math.max(
+      0,
+      Number(matchingEntry.boxes) - alreadyPulled
+    );
+
+  if (boxes > currentBoxes) {
+
+    alert(
+      "You only have " +
+      currentBoxes +
+      " current boxes available for this fish size / kilo per box."
+    );
+
+    return;
+
+  }
+
+  google.script.run
+
+    .withSuccessHandler(function(data) {
+
+      document.getElementById("pullBoxes").value = "";
+
+      document.getElementById("pullNote").value = "";
+
+      loadTemporaryHarvest();
+
+      document.getElementById("completeStatus").className =
+        "status status-success";
+
+      document.getElementById("completeStatus").textContent =
+        boxes +
+        " box(es) pulled out successfully. Current Harvest Total was not changed.";
+
+    })
+
+    .withFailureHandler(function(error) {
+
+      alert(
+        "Pull-out error: " +
+        error.message
+      );
+
+    })
+
+    .addPullOutRecord(
+      selectedCropping,
+      fishSize,
+      kiloPerBox,
+      boxes,
+      note
+    );
+
+}
+
+
+/* ==========================================================
+   RENDER PULL OUT HISTORY
+========================================================== */
+
+function renderPullOutHistory(data) {
+
+  pullOutHistory =
+    data || [];
+
+  const container =
+    document.getElementById("pullOutHistory");
+
+  if (!pullOutHistory.length) {
+
+    container.innerHTML =
+      '<div class="empty">No pull-out records yet.</div>';
+
+    renderCurrentBoxTable();
+
+    return;
+
+  }
+
+  let html = `
+
+    <table>
+
+      <tr>
+        <th>Pull Out ID</th>
+        <th>Date</th>
+        <th>Fish Size</th>
+        <th>Kilo / Box</th>
+        <th>Boxes Out</th>
+        <th>Note</th>
+        <th>Action</th>
+      </tr>
+
+  `;
+
+  pullOutHistory.forEach(function(record) {
+
+    html += `
+
+      <tr>
+
+        <td>${escapeHTML(record.id)}</td>
+
+        <td>${escapeHTML(record.date)}</td>
+
+        <td>${escapeHTML(record.fishSize)}</td>
+
+        <td>${Number(record.kiloPerBox).toFixed(2)} kg</td>
+
+        <td>${Number(record.boxes)}</td>
+
+        <td>${escapeHTML(record.note)}</td>
+
+        <td>
+
+          <button
+            class="btn btn-danger btn-small"
+            onclick="removePullOut('${escapeHTML(record.id)}')">
+            Remove
+          </button>
+
+        </td>
+
+      </tr>
+
+    `;
+
+  });
+
+  html += "</table>";
+
+  container.innerHTML = html;
+
+  renderCurrentBoxTable();
+
+}
+
+
+/* ==========================================================
+   REMOVE PULL OUT
+========================================================== */
+
+function removePullOut(id) {
+
+  if (!confirm(
+    "Remove this pull-out record?\n\nThe boxes will be returned to Current Box Count."
+  )) return;
+
+  google.script.run
+
+    .withSuccessHandler(function() {
+
+      loadTemporaryHarvest();
+
+      document.getElementById("completeStatus").className =
+        "status status-success";
+
+      document.getElementById("completeStatus").textContent =
+        "Pull-out record removed and the boxes were restored.";
+
+    })
+
+    .withFailureHandler(function(error) {
+
+      alert(
+        "Unable to remove pull-out: " +
+        error.message
+      );
+
+    })
+
+    .removePullOutRecord(
+      selectedCropping,
+      id
+    );
+
+}
+
+
+/* ==========================================================
+   COMPLETE HARVEST
+========================================================== */
+
+function completeHarvest() {
+
+  if (!selectedCropping) {
+
+    alert("Please select a cropping first.");
+
+    return;
+
+  }
+
+  if (!harvestEntries.length) {
+
+    alert("There are no harvest entries to complete.");
+
+    return;
+
+  }
+
+  const totalBoxes =
+    harvestEntries.reduce(function(total, entry) {
+      return total + (Number(entry.boxes) || 0);
+    }, 0);
+
+  if (totalBoxes <= 0) {
+
+    alert("Please record at least one box before completing the harvest.");
+
+    return;
+
+  }
+
+  if (!confirm(
+    "Complete this harvest?\n\nThe record will be permanently saved to Harvest Records."
+  )) return;
+
+  const buyer =
+    document.getElementById("buyerName").value.trim();
+
+  const cashAdvance =
+    Number(
+      document.getElementById("buyerCashAdvance").value
+    ) || 0;
+
+  const buyerRemaining =
+    Number(
+      document.getElementById("buyerRemaining").value
+    ) || 0;
+
+  const note =
+    document.getElementById("harvestNote").value.trim();
+
+  const button =
+    event && event.target ?
+    event.target :
+    null;
+
+  if (button) button.disabled = true;
+
+  google.script.run
+
+    .withSuccessHandler(function(result) {
+
+      if (button) button.disabled = false;
+
+      document.getElementById("completeStatus").className =
+        "status status-success";
+
+      document.getElementById("completeStatus").textContent =
+        "Harvest completed successfully. Permanent record: " +
+        result.harvestID;
+
+      harvestEntries = [];
+
+      pullOutHistory = [];
+
+      actionHistory = [];
+
+      document.getElementById("buyerName").value = "";
+      document.getElementById("buyerCashAdvance").value = "";
+      document.getElementById("buyerRemaining").value = "";
+      document.getElementById("harvestNote").value = "";
+
+      renderHarvestEntries();
+      renderCurrentBoxTable();
+      renderPullOutHistory([]);
+
+      updateHarvestTotals();
+
+      loadHarvestRecordsPage();
+      loadRecords();
+      loadDashboard();
+
+    })
+
+    .withFailureHandler(function(error) {
+
+      if (button) button.disabled = false;
+
+      alert(
+        "Unable to complete harvest: " +
+        error.message
+      );
+
+    })
+
+    .completeHarvest(
+      selectedCropping,
+      harvestEntries,
+      buyer,
+      cashAdvance,
+      buyerRemaining,
+      note
+    );
+
+}
+
+
+/* ==========================================================
+   CLEAR TEMPORARY HARVEST
+========================================================== */
+
+function clearTemporaryHarvest() {
+
+  if (!selectedCropping) {
+
+    alert("Please select a cropping first.");
+
+    return;
+
+  }
+
+  if (!confirm(
+    "Clear the temporary harvest?\n\nCompleted Harvest Records will NOT be deleted."
+  )) return;
+
+  google.script.run
+
+    .withSuccessHandler(function() {
+
+      harvestEntries = [];
+      pullOutHistory = [];
+      actionHistory = [];
+
+      document.getElementById("buyerName").value = "";
+      document.getElementById("buyerCashAdvance").value = "";
+      document.getElementById("buyerRemaining").value = "";
+      document.getElementById("harvestNote").value = "";
+
+      renderHarvestEntries();
+      renderCurrentBoxTable();
+      renderPullOutHistory([]);
+
+      updateHarvestTotals();
+
+      document.getElementById("completeStatus").className =
+        "status status-success";
+
+      document.getElementById("completeStatus").textContent =
+        "Temporary harvest cleared. Permanent Harvest Records remain safe.";
+
+    })
+
+    .withFailureHandler(function(error) {
+
+      alert(
+        "Unable to clear harvest: " +
+        error.message
+      );
+
+    })
+
+    .clearTemporaryHarvest(selectedCropping);
+
+}
+
+
+/* ==========================================================
+   RESET HARVEST UI
+========================================================== */
+
+function resetHarvestUI() {
+
+  harvestEntries = [];
+  pullOutHistory = [];
+  actionHistory = [];
+
+  renderHarvestEntries();
+
+  renderCurrentBoxTable();
+
+  renderPullOutHistory([]);
+
+  updateHarvestTotals();
+
+}
+
+
+/* ==========================================================
+   TRANSACTIONS
+========================================================== */
+
+function formatDateForInput(dateValue) {
+  if (!dateValue) return "";
+  const d = new Date(dateValue);
+  if (isNaN(d.getTime())) return "";
+  return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+}
+
+function updateTransactionYear() {
+  // Year is derived automatically by the backend and is no longer displayed in Transactions.
+}
+
+function updateTransactionCropping() {
+  const field = document.getElementById("transactionCroppingID");
+  if (!field) return;
+  if (selectedCropping) {
+    field.value = selectedCropping;
+    return;
+  }
+  google.script.run
+    .withSuccessHandler(function(id) { field.value = id || ""; })
+    .withFailureHandler(function(error) { console.error(error); field.value = ""; })
+    .getCurrentCroppingID();
+}
+
+function sortTransactionDropdowns() {
+  const ids = ["transactionType","transactionCategory","transactionExpenseType","transactionPaymentMethod","transactionDescriptionType"];
+  ids.forEach(function(id) {
+    const select = document.getElementById(id);
+    if (!select) return;
+    const currentValue = select.value;
+    const first = select.options.length ? select.options[0] : null;
+    const options = Array.from(select.options).slice(1);
+    options.sort(function(a,b) { return a.textContent.trim().localeCompare(b.textContent.trim(), undefined, {sensitivity:"base"}); });
+    options.forEach(function(option) { select.appendChild(option); });
+    if (first && first.parentNode !== select) select.insertBefore(first, select.firstChild);
+    if (currentValue) select.value = currentValue;
+  });
+}
+
+function prepareTransactionForm() {
+  sortTransactionDropdowns();
+  const dateField = document.getElementById("transactionDate");
+  if (dateField && !dateField.value) {
+    const now = new Date();
+    dateField.value = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0") + "-" + String(now.getDate()).padStart(2, "0");
+  }
+  updateTransactionCropping();
+}
+
+function toggleOtherCategory() {
+  const select = document.getElementById("transactionCategory");
+  const group = document.getElementById("transactionOtherCategoryGroup");
+  const input = document.getElementById("transactionOtherCategory");
+  if (!select || !group) return;
+  const isOther = select.value === "Other";
+  group.style.display = isOther ? "block" : "none";
+  if (!isOther && input) input.value = "";
+}
+
+function toggleOtherExpenseType() {
+  const select = document.getElementById("transactionExpenseType");
+  const group = document.getElementById("transactionOtherExpenseGroup");
+  const input = document.getElementById("transactionOtherExpenseType");
+  if (!select || !group) return;
+  const isOther = select.value === "Other";
+  group.style.display = isOther ? "block" : "none";
+  if (!isOther && input) input.value = "";
+}
+
+function toggleOtherDescription() {
+  const select = document.getElementById("transactionDescriptionType");
+  const group = document.getElementById("transactionOtherDescriptionGroup");
+  const input = document.getElementById("transactionNotes");
+
+  if (!select || !group) return;
+
+  const selected = select.value;
+
+  if (selected === "Other") {
+    group.style.display = "block";
+    if (input) {
+      input.value = "";
+      input.focus();
+    }
+  } else {
+    group.style.display = "none";
+
+    if (input) {
+      if (selected === "Fixed") {
+        input.value = "Fixed";
+      } else if (selected === "Feeds Fund") {
+        input.value = "Feeds Fund";
+      } else {
+        input.value = "";
+      }
+    }
+  }
+}
+
+function resetTransactionForm() {
+  document.getElementById("transactionID").value = "";
+  document.getElementById("transactionType").value = "";
+  document.getElementById("transactionCategory").value = "";
+  document.getElementById("transactionOtherCategory").value = "";
+  toggleOtherCategory();
+  document.getElementById("transactionExpenseType").value = "";
+  document.getElementById("transactionOtherExpenseType").value = "";
+  toggleOtherExpenseType();
+  document.getElementById("transactionAmount").value = "";
+  document.getElementById("transactionPaymentMethod").value = "";
+  document.getElementById("transactionDescriptionType").value = "";
+  document.getElementById("transactionNotes").value = "";
+  toggleOtherDescription();
+  prepareTransactionForm();
+}
+
+function saveTransaction() {
+  const date=document.getElementById("transactionDate").value;
+  const type=document.getElementById("transactionType").value;
+  const selectedCategory=document.getElementById("transactionCategory").value;
+  const otherCategory=document.getElementById("transactionOtherCategory").value.trim();
+  const category=selectedCategory === "Other" ? otherCategory : selectedCategory;
+  const selectedExpenseType=document.getElementById("transactionExpenseType").value;
+  const otherExpenseType=document.getElementById("transactionOtherExpenseType").value.trim();
+  const expenseType=selectedExpenseType === "Other" ? otherExpenseType : selectedExpenseType;
+  const descriptionType=document.getElementById("transactionDescriptionType").value;
+  let description="";
+  if (descriptionType === "Other") {
+    description=document.getElementById("transactionNotes").value.trim();
+  } else {
+    description=descriptionType;
+  }
+  const amount=Number(document.getElementById("transactionAmount").value)||0;
+  const paymentMethod=document.getElementById("transactionPaymentMethod").value;
+  if(!date||!type||!category||!selectedExpenseType||!expenseType||!descriptionType||!description||amount<=0||!paymentMethod){alert("Please complete Date, Type, Category, Sub category, Description, Amount and Payment Method.");return;}
+  const button=document.querySelector('#transactions .btn-primary'); if(button)button.disabled=true;
+  google.script.run.withSuccessHandler(function(result){if(button)button.disabled=false;const m=document.getElementById("transactionMessage");m.className="status status-success";m.textContent="Transaction saved: "+result.transactionID;resetTransactionForm();loadTransactionsPage();loadDashboard();loadExpenses();loadCaretaker();loadReinvestment();loadCapitalRecoveryPage();loadRecords();}).withFailureHandler(function(error){if(button)button.disabled=false;document.getElementById("transactionMessage").className="status status-error";document.getElementById("transactionMessage").textContent=error&&error.message?error.message:"Unable to save transaction.";}).addTransaction(date,selectedCropping||document.getElementById("transactionCroppingID").value,type,category,expenseType,amount,paymentMethod,description);
+}
+
+function setEditCategoryValue(value) {
+  const select = document.getElementById("editTransactionCategory");
+  const other = document.getElementById("editTransactionOtherCategory");
+  if (!select) return;
+  const normalized = String(value || "").trim();
+  const standard = ["Caretaker","Capital","Legal Requirements","Maintenance","Operation","Production","Reinvestment"];
+  if (standard.includes(normalized)) { select.value = normalized; if (other) other.value = ""; }
+  else { select.value = "Other"; if (other) other.value = normalized; }
+  toggleEditOtherCategory();
+}
+
+function setEditSubCategoryValue(value) {
+  const select = document.getElementById("editTransactionExpenseType");
+  const other = document.getElementById("editTransactionOtherExpenseType");
+  if (!select) return;
+  const normalized = String(value || "").trim();
+  const standard = ["Additional Capital","Bamboo","Cigarette","Feeds","Fingerlings","Gasoline","Harvest Labor","Labor","Nets","Original Capital","Rice","Salary"];
+  if (standard.includes(normalized)) { select.value = normalized; if (other) other.value = ""; }
+  else { select.value = "Other"; if (other) other.value = normalized; }
+  toggleEditOtherExpenseType();
+}
+
+function setEditDescriptionValue(value) {
+  const select = document.getElementById("editTransactionDescriptionType");
+  const other = document.getElementById("editTransactionNotes");
+  if (!select) return;
+  const normalized = String(value || "").trim();
+  if (normalized === "Fixed" || normalized === "Feeds Fund") { select.value = normalized; if (other) other.value = ""; }
+  else { select.value = "Other"; if (other) other.value = normalized; }
+  toggleEditOtherDescription();
+}
+
+function toggleEditOtherCategory() {
+  const select = document.getElementById("editTransactionCategory");
+  const group = document.getElementById("editTransactionOtherCategoryGroup");
+  if (!select || !group) return;
+  group.style.display = select.value === "Other" ? "block" : "none";
+}
+
+function toggleEditOtherExpenseType() {
+  const select = document.getElementById("editTransactionExpenseType");
+  const group = document.getElementById("editTransactionOtherExpenseGroup");
+  if (!select || !group) return;
+  group.style.display = select.value === "Other" ? "block" : "none";
+}
+
+function toggleEditOtherDescription() {
+  const select = document.getElementById("editTransactionDescriptionType");
+  const group = document.getElementById("editTransactionOtherDescriptionGroup");
+  if (!select || !group) return;
+  group.style.display = select.value === "Other" ? "block" : "none";
+}
+
+function editTransaction(transactionID) {
+  transactionID = String(transactionID || '').trim();
+  if (!transactionID) {
+    alert('Transaction ID is missing.');
+    return;
+  }
+
+  // Open the editor immediately so the Edit button always gives visible feedback.
+  const modal = document.getElementById('transactionEditModal');
+  const msg = document.getElementById('editTransactionMessage');
+  if (modal) modal.classList.remove('hidden');
+  if (msg) {
+    msg.style.display = 'block';
+    msg.className = 'status status-info';
+    msg.textContent = 'Loading transaction ' + transactionID + '...';
+  }
+
+  google.script.run.withSuccessHandler(function(data) {
+    if (!data) { alert("Transaction was not found."); return; }
+    document.getElementById("editTransactionID").value = data.transactionID || "";
+    document.getElementById("editTransactionIDDisplay").value = data.transactionID || "";
+    document.getElementById("editTransactionDate").value = formatDateForInput(data.date);
+    document.getElementById("editTransactionCroppingID").value = data.croppingID || "";
+    document.getElementById("editTransactionType").value = data.type || "";
+    setEditCategoryValue(data.category);
+    setEditSubCategoryValue(data.subCategory);
+    document.getElementById("editTransactionAmount").value = Number(data.amount) || 0;
+    document.getElementById("editTransactionPaymentMethod").value = data.paymentMethod || "";
+    setEditDescriptionValue(data.description);
+    const msg = document.getElementById("editTransactionMessage");
+    if (msg) { msg.style.display = "none"; msg.textContent = ""; }
+    if (modal) modal.classList.remove("hidden");
+  }).withFailureHandler(function(error) {
+    alert("Unable to load transaction: " + (error && error.message ? error.message : "Unknown error"));
+  }).getTransactionByID(transactionID);
+}
+
+function closeTransactionEditModal(event) {
+  if (event && event.target !== document.getElementById("transactionEditModal")) return;
+  const modal = document.getElementById("transactionEditModal");
+  if (modal) modal.classList.add("hidden");
+}
+
+function saveEditedTransaction() {
+  const transactionID = document.getElementById("editTransactionID").value.trim();
+  const date = document.getElementById("editTransactionDate").value;
+  const croppingID = document.getElementById("editTransactionCroppingID").value.trim();
+  const type = document.getElementById("editTransactionType").value;
+  const selectedCategory = document.getElementById("editTransactionCategory").value;
+  const category = selectedCategory === "Other" ? document.getElementById("editTransactionOtherCategory").value.trim() : selectedCategory;
+  const selectedSubCategory = document.getElementById("editTransactionExpenseType").value;
+  const subCategory = selectedSubCategory === "Other" ? document.getElementById("editTransactionOtherExpenseType").value.trim() : selectedSubCategory;
+  const amount = Number(document.getElementById("editTransactionAmount").value) || 0;
+  const paymentMethod = document.getElementById("editTransactionPaymentMethod").value;
+  const selectedDescription = document.getElementById("editTransactionDescriptionType").value;
+  const description = selectedDescription === "Other" ? document.getElementById("editTransactionNotes").value.trim() : selectedDescription;
+  if (!transactionID || !date || !croppingID || !type || !category || !subCategory || amount <= 0 || !paymentMethod || !description) {
+    alert("Please complete Date, Cropping ID, Type, Category, Sub category, Amount, Payment Method and Description."); return;
+  }
+  const button = document.getElementById("saveEditedTransactionButton");
+  if (button) button.disabled = true;
+  google.script.run.withSuccessHandler(function(result) {
+    if (button) button.disabled = false;
+    const msg = document.getElementById("editTransactionMessage");
+    if (msg) { msg.style.display = "block"; msg.className = "status status-success"; msg.textContent = "Transaction updated: " + result.transactionID; }
+    setTimeout(function() {
+      closeTransactionEditModal();
+      loadTransactionsPage(); loadDashboard(); loadExpenses(); loadCaretaker(); loadReinvestment(); loadCapitalRecoveryPage(); loadRecords();
+    }, 250);
+  }).withFailureHandler(function(error) {
+    if (button) button.disabled = false;
+    const msg = document.getElementById("editTransactionMessage");
+    if (msg) { msg.style.display = "block"; msg.className = "status status-error"; msg.textContent = error && error.message ? error.message : "Unable to update transaction."; }
+  }).updateTransaction(transactionID, date, croppingID, type, category, subCategory, amount, paymentMethod, description);
+}
+
+// Keep the function globally available. Transaction History buttons also receive
+// direct click handlers immediately after the table is rendered below.
+window.editTransaction = editTransaction;
+
+function deleteTransaction(transactionID) {
+  if (!transactionID) return;
+  if (!confirm("Delete transaction " + transactionID + "?\n\nThis will remove only this transaction and will not delete your cropping records.")) return;
+
+  google.script.run
+    .withSuccessHandler(function() {
+      loadTransactionsPage();
+      loadDashboard();
+      loadExpenses();
+      loadCaretaker();
+      loadReinvestment();
+      loadRecords();
+      const message = document.getElementById("transactionMessage");
+      message.className = "status status-success";
+      message.textContent = "Transaction deleted: " + transactionID;
+    })
+    .withFailureHandler(function(error) {
+      alert("Unable to delete transaction: " + (error && error.message ? error.message : "Unknown error"));
+    })
+    .deleteTransaction(transactionID);
+}
+
+function clearAllDemoData() {
+
+  if (!confirm("Clear all existing sample/example transaction and record data?\n\nCroppings will be kept. This cannot be undone.")) return;
+
+  google.script.run
+    .withSuccessHandler(function(result) {
+      document.getElementById("transactionMessage").className =
+        "status status-success";
+      document.getElementById("transactionMessage").textContent =
+        result.message;
+      loadCroppings();
+      loadTransactionsPage();
+      loadDashboard();
+      loadExpenses();
+      loadCaretaker();
+      loadReinvestment();
+      loadRecords();
+      loadHarvestRecordsPage();
+      loadHistory();
+    })
+    .withFailureHandler(function(error) {
+      document.getElementById("transactionMessage").className =
+        "status status-error";
+      document.getElementById("transactionMessage").textContent =
+        error && error.message ? error.message : "Unable to clear sample data.";
+    })
+    .resetDemoData();
+}
+
+
+function loadTransactionsPage() {
+  prepareTransactionForm();
+
+  google.script.run
+    .withSuccessHandler(function(data) {
+      const container = document.getElementById("transactionsTable");
+      if (!data || !data.length) {
+        container.innerHTML = '<div class="empty">No transactions yet. Add your first transaction above.</div>';
+        return;
+      }
+
+      data = data.slice().sort(function(a, b) {
+        const da = new Date(a.date), db = new Date(b.date);
+        const ta = isNaN(da.getTime()) ? 0 : da.getTime();
+        const tb = isNaN(db.getTime()) ? 0 : db.getTime();
+        if (tb !== ta) return tb - ta;
+        return String(b.transactionID || "").localeCompare(String(a.transactionID || ""), undefined, {numeric:true, sensitivity:"base"});
+      });
+
+      let html = `<div style="overflow-x:auto;"><table>
+        <tr>
+          <th>Transaction ID</th><th>Date</th><th>Cropping ID</th>
+          <th>Type</th><th>Category</th><th>Sub category</th><th>Description</th><th>Amount</th>
+          <th>Payment Method</th><th>Edit</th><th>Delete</th>
+        </tr>`;
+
+      data.forEach(function(row) {
+        const typeClass = row.type === "In" ? "status-success" : "status-error";
+        html += `<tr>
+          <td>${escapeHTML(row.transactionID)}</td>
+          <td>${escapeHTML(formatReportDate(row.date))}</td>
+          <td>${escapeHTML(row.croppingID)}</td>
+          <td><span class="${typeClass}" style="padding:3px 7px;border-radius:6px;">${escapeHTML(row.type)}</span></td>
+          <td>${escapeHTML(row.category)}</td>
+          <td>${escapeHTML(row.subCategory)}</td>
+          <td>${escapeHTML(row.description)}</td>
+          <td>${money(row.amount)}</td>
+          <td>${escapeHTML(row.paymentMethod)}</td>
+          <td><button type="button" class="btn btn-secondary transaction-edit-button" style="padding:6px 9px;min-height:30px;cursor:pointer;" data-transaction-id="${escapeHTML(row.transactionID)}">Edit</button></td>
+          <td><button class="btn btn-danger" style="padding:6px 9px;min-height:30px;" onclick="deleteTransaction('${escapeHTML(row.transactionID)}')">Delete</button></td>
+        </tr>`;
+      });
+
+      html += `</table></div>`;
+      const total = data.reduce(function(sum,row){ return sum + (Number(row.amount)||0); },0);
+      html += '<div class="small-total">Total: '+money(total)+'</div>';
+      container.innerHTML = html;
+
+      // Attach the Edit action directly to every newly-rendered button.
+      // This avoids inline-handler and dynamic-table event issues in Apps Script.
+      container.querySelectorAll('.transaction-edit-button').forEach(function(button) {
+        button.addEventListener('click', function(event) {
+          event.preventDefault();
+          event.stopPropagation();
+          editTransaction(button.getAttribute('data-transaction-id'));
+        });
+      });
+    })
+    .withFailureHandler(function(error) {
+      document.getElementById("transactionsTable").innerHTML = '<div class="empty">Unable to load transactions: ' + escapeHTML(error && error.message ? error.message : "Unknown error") + '</div>';
+    })
+    .getTransactionsByCropping(selectedCropping || "");
+}
+
+
+/* ==========================================================
+   DASHBOARD
+========================================================== */
+
+function loadDashboard() {
+  google.script.run.withSuccessHandler(function(data) {
+    document.getElementById("dashCash").textContent = money(data.availableCash);
+    document.getElementById("dashProfit").textContent = money(data.netProfit);
+    document.getElementById("dashCapital").textContent = money(data.originalCapital);
+    document.getElementById("dashRecovered").textContent = money(data.capitalRecovered);
+    document.getElementById("dashStill").textContent = money(data.capitalStill);
+    const statusEl = document.getElementById("dashCapitalStatus");
+    if (statusEl) {
+      statusEl.textContent = data.capitalStatus || "Still Need to Recover";
+      statusEl.className = data.capitalStatus === "Recovered" ? "status status-success" : "status status-error";
+      statusEl.style.display = "inline-block";
+    }
+    document.getElementById("dashReinvestment").textContent = money(data.reinvestment);
+    document.getElementById("dashDebt").textContent = money(data.outstandingDebt);
+    document.getElementById("dashNet").textContent = money(data.netFinancialPosition);
+    document.getElementById("dashMoneyIn").textContent = money(data.moneyIn);
+    document.getElementById("dashMoneyOut").textContent = money(data.moneyOut);
+    loadDashboardDetails();
+  }).withFailureHandler(function(error) { console.error(error); }).getCapitalDashboard("");
+}
+
+function toggleDashboardDetail(id, header) {
+  const el = document.getElementById(id);
+  if (!el) return;
+
+  const isHidden = el.classList.contains('hidden');
+
+  if (isHidden) {
+    el.classList.remove('hidden');
+    el.style.display = 'block';
+  } else {
+    el.classList.add('hidden');
+    el.style.display = 'none';
+  }
+}
+
+function loadDashboardDetails() {
+  google.script.run
+    .withSuccessHandler(function(data) {
+      data = data || {};
+
+      const profit = document.getElementById('netProfitDetails');
+      const original = document.getElementById('originalCapitalDetails');
+      const recovered = document.getElementById('capitalRecoveredDetails');
+      const reinvest = document.getElementById('reinvestmentDetails');
+
+      if (profit) {
+        const rows = Array.isArray(data.netProfit) ? data.netProfit : [];
+        let h = '<div style="overflow-x:auto;"><table><tr><th>Cropping ID</th><th>Date</th><th>Amount</th></tr>';
+
+        rows.forEach(function(r) {
+          h += '<tr>' +
+            '<td>' + escapeHTML(r.croppingID || '') + '</td>' +
+            '<td>' + escapeHTML(formatReportDate(r.date || '')) + '</td>' +
+            '<td>' + money(Number(r.amount) || 0) + '</td>' +
+            '</tr>';
+        });
+
+        h += '</table></div>';
+        if (!rows.length) {
+          h = '<div class="empty" style="font-size:12px;">No net profit yet.</div>';
+        }
+        profit.innerHTML = h;
+      }
+
+      if (original) {
+        const rows = Array.isArray(data.originalCapital) ? data.originalCapital : [];
+        let h = '<div style="overflow-x:auto;"><table><tr><th>Name</th><th>Date</th><th>Amount</th></tr>';
+
+        rows.forEach(function(r) {
+          h += '<tr>' +
+            '<td>' + escapeHTML(r.name || '') + '</td>' +
+            '<td>' + escapeHTML(formatReportDate(r.date || '')) + '</td>' +
+            '<td>' + money(Number(r.amount) || 0) + '</td>' +
+            '</tr>';
+        });
+
+        h += '</table></div>';
+        if (!rows.length) {
+          h = '<div class="empty" style="font-size:12px;">No original capital yet.</div>';
+        }
+        original.innerHTML = h;
+      }
+
+      if (recovered) {
+        const rows = Array.isArray(data.capitalRecovered) ? data.capitalRecovered : [];
+        let h = '<div style="overflow-x:auto;"><table><tr><th>Cropping ID</th><th>Date</th><th>Amount Recovered</th></tr>';
+
+        rows.forEach(function(r) {
+          h += '<tr>' +
+            '<td>' + escapeHTML(r.croppingID || '') + '</td>' +
+            '<td>' + escapeHTML(formatReportDate(r.date || '')) + '</td>' +
+            '<td>' + money(Number(r.amount) || 0) + '</td>' +
+            '</tr>';
+        });
+
+        h += '</table></div>';
+        if (!rows.length) {
+          h = '<div class="empty" style="font-size:12px;">No capital recovery yet.</div>';
+        }
+        recovered.innerHTML = h;
+      }
+
+      if (reinvest) {
+        const rows = Array.isArray(data.reinvestment) ? data.reinvestment : [];
+        let h = '<div style="overflow-x:auto;"><table><tr><th>Name (Reinvested)</th><th>Date</th><th>Amount</th></tr>';
+
+        rows.forEach(function(r) {
+          h += '<tr>' +
+            '<td>' + escapeHTML(r.name || '') + '</td>' +
+            '<td>' + escapeHTML(formatReportDate(r.date || '')) + '</td>' +
+            '<td>' + money(Number(r.amount) || 0) + '</td>' +
+            '</tr>';
+        });
+
+        h += '</table></div>';
+        if (!rows.length) {
+          h = '<div class="empty" style="font-size:12px;">No reinvestment yet.</div>';
+        }
+        reinvest.innerHTML = h;
+      }
+    })
+    .withFailureHandler(function(error) {
+      console.error("Dashboard details error:", error);
+      const message = error && error.message ? error.message : "Unable to load dashboard details.";
+
+      ['netProfitDetails','originalCapitalDetails','capitalRecoveredDetails','reinvestmentDetails']
+        .forEach(function(id) {
+          const el = document.getElementById(id);
+          if (el) {
+            el.innerHTML = '<div class="empty" style="font-size:12px;color:#b91c1c;">' +
+              escapeHTML(message) +
+              '</div>';
+          }
+        });
+    })
+    .getDashboardDetailData('');
+}
+
+function loadOriginalCapitalDetails() { loadDashboardDetails(); }
+
+
+/* ==========================================================
+   HARVEST RECORDS PAGE
+========================================================== */
+
+function loadHarvestRecordsPage() {
+
+  google.script.run
+
+    .withSuccessHandler(function(data) {
+
+      const container =
+        document.getElementById("harvestRecordsTable");
+
+      if (!data || !data.length) {
+
+        container.innerHTML =
+          '<div class="empty">No completed harvest records.</div>';
+
+        return;
+
+      }
+
+      let html = `
+
+        <table>
+
+          <tr>
+            <th>Harvest ID</th>
+            <th>Cropping</th>
+            <th>Date</th>
+            <th>Fish Size / Kilo</th>
+            <th>Total Boxes</th>
+            <th>Total Kilos</th>
+            <th>Total Sales</th>
+            <th>5% Deduction</th>
+            <th>Net Income</th>
+            <th>Cash Advance</th>
+            <th>Buyer Remaining</th>
+            <th>Buyer</th>
+            <th>Note</th>
+          </tr>
+
+      `;
+
+      data.forEach(function(row) {
+
+        html += `
+
+          <tr>
+
+            <td>${escapeHTML(row.harvestID)}</td>
+            <td>${escapeHTML(row.croppingID)}</td>
+            <td>${escapeHTML(formatReportDate(row.date))}</td>
+            <td>${escapeHTML(row.fishSummary)}</td>
+            <td>${row.totalBoxes}</td>
+            <td>${Number(row.totalKilos).toFixed(2)} kg</td>
+            <td>${money(row.totalSales)}</td>
+            <td>${money(row.deduction)}</td>
+            <td>${money(row.netIncome)}</td>
+            <td>${money(row.cashAdvance)}</td>
+            <td>${money(row.buyerRemaining)}</td>
+            <td>${escapeHTML(row.buyer)}</td>
+            <td>${escapeHTML(row.note)}</td>
+
+          </tr>
+
+        `;
+
+      });
+
+      html += "</table>";
+      const totalNetIncome = data.reduce(function(sum,row){ return sum + (Number(row.netIncome)||0); },0);
+      html += '<div class="small-total">Total Net Income: '+money(totalNetIncome)+'</div>';
+
+      container.innerHTML = html;
+
+    })
+
+    .getHarvestRecords();
+
+}
+
+
+
+function setFormDateIfEmpty(id) {
+  const field=document.getElementById(id);
+  if(field && !field.value){const now=new Date();field.value=now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0")+"-"+String(now.getDate()).padStart(2,"0");}
+}
+function prepareExpenseForm(){setFormDateIfEmpty("expenseDate");}
+function resetExpenseForm(){document.getElementById("expenseDate").value="";document.getElementById("expenseCategory").value="";document.getElementById("expenseSubCategory").value="";document.getElementById("expenseDescription").value="";document.getElementById("expenseAmount").value="";document.getElementById("expensePaymentMethod").value="";prepareExpenseForm();}
+function saveExpense(){
+  const date=document.getElementById("expenseDate").value, category=document.getElementById("expenseCategory").value, subCategory=document.getElementById("expenseSubCategory").value.trim(), description=document.getElementById("expenseDescription").value.trim(), amount=Number(document.getElementById("expenseAmount").value)||0, paymentMethod=document.getElementById("expensePaymentMethod").value;
+  if(!date||!category||!subCategory||!description||amount<=0||!paymentMethod){alert("Please complete Date, Category, Sub category, Description, Amount and Payment Method.");return;}
+  const button=document.querySelector("#expenses .btn-primary");if(button)button.disabled=true;
+  google.script.run.withSuccessHandler(function(result){if(button)button.disabled=false;const m=document.getElementById("expenseMessage");m.className="status status-success";m.textContent="Expense saved to Records: "+result.transactionID;resetExpenseForm();loadExpenses();loadTransactionsPage();loadDashboard();loadRecords();}).withFailureHandler(function(error){if(button)button.disabled=false;const m=document.getElementById("expenseMessage");m.className="status status-error";m.textContent=error&&error.message?error.message:"Unable to save expense.";}).addTransaction(date,selectedCropping||"","Out",category,subCategory,amount,paymentMethod,description);
+}
+function prepareCaretakerForm(){setFormDateIfEmpty("caretakerDate");}
+function resetCaretakerForm(){document.getElementById("caretakerDate").value="";document.getElementById("caretakerSubCategory").value="";document.getElementById("caretakerDescription").value="";document.getElementById("caretakerAmount").value="";document.getElementById("caretakerPaymentMethod").value="";prepareCaretakerForm();}
+function saveCaretaker(){
+  const date=document.getElementById("caretakerDate").value, subCategory=document.getElementById("caretakerSubCategory").value.trim(), description=document.getElementById("caretakerDescription").value.trim(), amount=Number(document.getElementById("caretakerAmount").value)||0, paymentMethod=document.getElementById("caretakerPaymentMethod").value;
+  if(!date||!subCategory||!description||amount<=0||!paymentMethod){alert("Please complete Date, Sub category, Description, Amount and Payment Method.");return;}
+  const button=document.querySelector("#caretaker .btn-primary");if(button)button.disabled=true;
+  google.script.run.withSuccessHandler(function(result){if(button)button.disabled=false;const m=document.getElementById("caretakerMessage");m.className="status status-success";m.textContent="Caretaker record saved to Records: "+result.transactionID;resetCaretakerForm();loadCaretaker();loadTransactionsPage();loadDashboard();loadRecords();}).withFailureHandler(function(error){if(button)button.disabled=false;const m=document.getElementById("caretakerMessage");m.className="status status-error";m.textContent=error&&error.message?error.message:"Unable to save caretaker record.";}).addTransaction(date,selectedCropping||"","Out","Caretaker",subCategory,amount,paymentMethod,description);
+}
+
+/* ==========================================================
+   EXPENSES
+========================================================== */
+
+function loadExpenses() {
+  google.script.run
+    .withSuccessHandler(function(data) {
+      const container = document.getElementById("expenseTable");
+      const expenses = (data || []).filter(function(row) {
+        const type = String(row.type || "").toLowerCase();
+        const category = String(row.category || "").trim().toLowerCase();
+        return type === "out" && category !== "caretaker" && category !== "capital" && category !== "reinvestment";
+      });
+      if (!expenses.length) { container.innerHTML = '<div class="empty">No expense transactions for this selection.</div>'; return; }
+      let html='<div style="overflow-x:auto;"><table><tr><th>Transaction ID</th><th>Date</th><th>Cropping</th><th>Type</th><th>Category</th><th>Sub category</th><th>Description</th><th>Amount</th><th>Payment Method</th></tr>';
+      expenses.forEach(function(row){ html += '<tr><td>'+escapeHTML(row.transactionID)+'</td><td>'+escapeHTML(formatReportDate(row.date))+'</td><td>'+escapeHTML(row.croppingID)+'</td><td>'+escapeHTML(row.type)+'</td><td>'+escapeHTML(row.category)+'</td><td>'+escapeHTML(row.subCategory||'')+'</td><td>'+escapeHTML(row.description||'')+'</td><td>'+money(row.amount)+'</td><td>'+escapeHTML(row.paymentMethod)+'</td></tr>'; });
+      html += '</table></div>';
+      const total = expenses.reduce(function(sum,row){ return sum + (Number(row.amount)||0); },0);
+      html += '<div class="small-total">Total: '+money(total)+'</div>';
+      container.innerHTML=html;
+    })
+    .withFailureHandler(function(error) { document.getElementById("expenseTable").innerHTML='<div class="empty">Unable to load expenses: '+escapeHTML(error && error.message ? error.message : "Unknown error")+'</div>'; })
+    .getExpenseTransactions(selectedCropping || "");
+}
+
+/* ==========================================================
+   CARETAKER
+========================================================== */
+
+function loadCaretaker() {
+  google.script.run
+    .withSuccessHandler(function(data) {
+      const container = document.getElementById("caretakerTable");
+      if (!data || !data.length) { container.innerHTML = '<div class="empty">No caretaker transactions.</div>'; return; }
+      let html = '<div style="overflow-x:auto;"><table><tr><th>Transaction ID</th><th>Date</th><th>Cropping</th><th>Type</th><th>Category</th><th>Sub category</th><th>Description</th><th>Amount</th><th>Payment Method</th></tr>';
+      data.forEach(function(row) {
+        html += '<tr><td>'+escapeHTML(row.transactionID)+'</td><td>'+escapeHTML(formatReportDate(row.date))+'</td><td>'+escapeHTML(row.croppingID)+'</td><td>'+escapeHTML(row.type)+'</td><td>'+escapeHTML(row.category)+'</td><td>'+escapeHTML(row.subCategory||'')+'</td><td>'+escapeHTML(row.description||'')+'</td><td>'+money(row.amount)+'</td><td>'+escapeHTML(row.paymentMethod)+'</td></tr>';
+      });
+      html += '</table></div>';
+      const total = data.reduce(function(sum,row){ return sum + (Number(row.amount)||0); },0);
+      html += '<div class="small-total">Total: '+money(total)+'</div>';
+      container.innerHTML = html;
+    })
+    .withFailureHandler(function(error) { document.getElementById("caretakerTable").innerHTML = '<div class="empty">Unable to load caretaker transactions: '+escapeHTML(error && error.message ? error.message : "Unknown error")+'</div>'; })
+    .getCaretakerTransactions(selectedCropping || "");
+}
+
+/* ==========================================================
+   REINVESTMENT
+========================================================== */
+
+function loadReinvestment() {
+  google.script.run
+    .withSuccessHandler(function(data) {
+      const container = document.getElementById("reinvestmentTable");
+      if (!data || !data.length) { container.innerHTML = '<div class="empty">No reinvestment records.</div>'; return; }
+      let html = '<div style="overflow-x:auto;"><table><tr><th>Transaction ID</th><th>Date</th><th>Cropping</th><th>Year</th><th>Type</th><th>Category</th><th>Sub category</th><th>Description</th><th>Amount</th><th>Payment Method</th></tr>';
+      data.forEach(function(row) { html += '<tr><td>'+escapeHTML(row.transactionID)+'</td><td>'+escapeHTML(formatReportDate(row.date))+'</td><td>'+escapeHTML(row.croppingID)+'</td><td>'+escapeHTML(row.year)+'</td><td>'+escapeHTML(row.type)+'</td><td>'+escapeHTML(row.category)+'</td><td>'+escapeHTML(row.subCategory||'')+'</td><td>'+escapeHTML(row.description||'')+'</td><td>'+money(row.amount)+'</td><td>'+escapeHTML(row.paymentMethod)+'</td></tr>';  });
+      html += '</table></div>';
+      const total = data.reduce(function(sum,row){ return sum + (Number(row.amount)||0); },0);
+      html += '<div class="small-total">Total: '+money(total)+'</div>';
+      container.innerHTML = html;
+    })
+    .withFailureHandler(function(error) { document.getElementById("reinvestmentTable").innerHTML = '<div class="empty">Unable to load reinvestment records: '+escapeHTML(error && error.message ? error.message : "Unknown error")+'</div>'; })
+    .getReinvestmentReport(selectedCropping || "");
+}
+
+
+/* ==========================================================
+   CAPITAL RECOVERY
+========================================================== */
+
+function saveCapitalRecovery() {
+
+  const date =
+    document.getElementById("recoveryDate").value;
+
+  const partner =
+    document.getElementById("recoveryPartner").value.trim();
+
+  const amount =
+    document.getElementById("recoveryAmount").value;
+
+  const notes =
+    document.getElementById("recoveryNotes").value.trim();
+
+  if (!date || !partner || Number(amount) <= 0) {
+
+    alert(
+      "Please enter the date, partner and recovery amount."
+    );
+
+    return;
+
+  }
+
+  google.script.run
+
+    .withSuccessHandler(function(result) {
+
+      document.getElementById("recoveryAmount").value = "";
+      document.getElementById("recoveryNotes").value = "";
+
+      document.getElementById("recoveryMessage").className =
+        "status status-success";
+
+      document.getElementById("recoveryMessage").textContent =
+        "Capital recovery saved: " +
+        result.recoveryID;
+
+      loadDashboard();
+
+      loadCapitalRecoveryPage();
+
+    })
+
+    .withFailureHandler(function(error) {
+
+      document.getElementById("recoveryMessage").className =
+        "status status-error";
+
+      document.getElementById("recoveryMessage").textContent =
+        error.message;
+
+    })
+
+    .addCapitalRecovery(
+      selectedCropping || "",
+      date,
+      partner,
+      amount,
+      notes
+    );
+
+}
+
+
+function loadCapitalRecoveryPage() {
+  google.script.run
+    .withSuccessHandler(function(data) {
+      const container = document.getElementById("capitalRecoveryTable");
+      const tx = data && data.transactions ? data.transactions : [];
+      const legacy = data && data.legacy ? data.legacy : [];
+      if (!tx.length && !legacy.length) { container.innerHTML = '<div class="empty">No capital records.</div>'; return; }
+      let html = '<div style="overflow-x:auto;"><table><tr><th>Transaction ID</th><th>Date</th><th>Cropping</th><th>Year</th><th>Type</th><th>Category</th><th>Sub category</th><th>Description</th><th>Amount</th><th>Payment Method</th></tr>';
+      tx.forEach(function(row){ html += '<tr><td>'+escapeHTML(row.transactionID)+'</td><td>'+escapeHTML(formatReportDate(row.date))+'</td><td>'+escapeHTML(row.croppingID)+'</td><td>'+escapeHTML(row.year)+'</td><td>'+escapeHTML(row.type)+'</td><td>'+escapeHTML(row.category)+'</td><td>'+escapeHTML(row.subCategory||'')+'</td><td>'+escapeHTML(row.description||'')+'</td><td>'+money(row.amount)+'</td><td>'+escapeHTML(row.paymentMethod)+'</td></tr>'; });
+      html += '</table></div>';
+      if (legacy.length) {
+        html += '<h3 style="margin-top:24px;">Capital Recovery Records</h3><div style="overflow-x:auto;"><table><tr><th>Capital ID</th><th>Cropping</th><th>Date</th><th>Partner</th><th>Type</th><th>Amount</th><th>Description</th></tr>';
+        legacy.forEach(function(row){ html += '<tr><td>'+escapeHTML(row.capitalID)+'</td><td>'+escapeHTML(row.croppingID)+'</td><td>'+escapeHTML(formatReportDate(row.date))+'</td><td>'+escapeHTML(row.partner)+'</td><td>'+escapeHTML(row.capitalType)+'</td><td>'+money(row.amount)+'</td><td>'+escapeHTML(row.notes||'')+'</td></tr>'; });
+        html += '</table></div>';
+      }
+      const total = tx.reduce(function(sum,row){ return sum + (Number(row.amount)||0); },0) + legacy.reduce(function(sum,row){ return sum + (Number(row.amount)||0); },0);
+      html += '<div class="small-total">Total: '+money(total)+'</div>';
+      container.innerHTML = html;
+    })
+    .withFailureHandler(function(error){ document.getElementById("capitalRecoveryTable").innerHTML='<div class="empty">Unable to load capital records: '+escapeHTML(error && error.message ? error.message : "Unknown error")+'</div>'; })
+    .getCapitalRecordsForPage(selectedCropping || "");
+}
+
+
+/* ==========================================================
+   HISTORY
+========================================================== */
+
+function loadHistory() {
+  google.script.run
+    .withSuccessHandler(function(data) {
+      const container = document.getElementById('historyTable');
+      if (!container) return;
+
+      if (!data || !data.length) {
+        container.innerHTML = '<div class="empty">No cropping history.</div>';
+        return;
+      }
+
+      let html = '<div style="overflow-x:auto;">';
+      html += '<table class="history-main-table">';
+      html += '<thead><tr>';
+      html += '<th>Cropping ID</th>';
+      html += '<th>Year</th>';
+      html += '<th>Cropping No.</th>';
+      html += '<th>Start Date</th>';
+      html += '<th>Harvest Date</th>';
+      html += '<th>Harvest Net Income</th>';
+      html += '<th>Total Production Expense</th>';
+      html += '<th>Total Operation Expense</th>';
+      html += '<th>Fixed Expense</th>';
+      html += '<th>Caretaker Take-home</th>';
+      html += '<th>Net Profit</th>';
+      html += '</tr></thead><tbody>';
+
+      data.forEach(function(row) {
+        html += '<tr>';
+        html += '<td><strong>' + escapeHTML(row.croppingID || '') + '</strong></td>';
+        html += '<td>' + escapeHTML(row.year || '') + '</td>';
+        html += '<td>' + escapeHTML(row.croppingNo == null ? '' : String(row.croppingNo)) + '</td>';
+        html += '<td>' + escapeHTML(formatReportDate(row.startDate || '')) + '</td>';
+        html += '<td>' + escapeHTML(formatReportDate(row.harvestDate || '')) + '</td>';
+        html += '<td>' + money(row.harvestNetIncome || 0) + '</td>';
+        html += '<td>' + money(row.productionExpense || 0) + '</td>';
+        html += '<td>' + money(row.operationExpense || 0) + '</td>';
+        html += '<td>' + money(row.fixedExpense || 0) + '</td>';
+        html += '<td>' + money(row.caretakerTakeHome || 0) + '</td>';
+        html += '<td><strong>' + money(row.netProfit || 0) + '</strong></td>';
+        html += '</tr>';
+      });
+
+      html += '</tbody></table></div>';
+      container.innerHTML = html;
+    })
+    .withFailureHandler(function(error) {
+      const container = document.getElementById('historyTable');
+      if (container) {
+        container.innerHTML = '<div class="empty">Unable to load cropping history: ' +
+          escapeHTML(error && error.message ? error.message : 'Unknown error') +
+          '</div>';
+      }
+    })
+    .getCroppingHistoryReport();
+}
+
+
+function toggleHistoryCard(id, header) {
+  const body = document.getElementById(id);
+  if (!body) return;
+  body.classList.toggle('hidden');
+  if (header) header.classList.toggle('closed');
+}
+
+
+
+function loadPrintReport() {
+  const c=document.getElementById('printReportContent'); if(!c)return;
+  c.innerHTML='<div class="empty">Click View Caretaker or View Cropping Transactions to open the report on paper.</div>';
+  google.script.run.withSuccessHandler(function(v){
+    const p=document.getElementById('reportDeductionPercent');
+    if(p)p.value=v;
+  }).getCaretakerDeductionPercent();
+}
+
+function saveReportDeductionPercent() {
+  const input=document.getElementById('reportDeductionPercent');
+  const v=Math.max(0,Math.min(100,Number(input && input.value)||0));
+  if(input) input.value=v;
+  google.script.run.withFailureHandler(function(e){
+    alert('Unable to save deduction: '+(e&&e.message?e.message:'Unknown error'));
+  }).setCaretakerDeductionPercent(v);
+  loadDashboard();
+  if(currentReportType) openReportModal(currentReportType);
+}
+
+function openReportModal(type) {
+  const modal=document.getElementById('reportModal');
+  const c=document.getElementById('reportModalContent');
+  if(!modal||!c)return;
+  currentReportType=type==='caretaker'?'caretaker':'cropping';
+  modal.classList.remove('hidden');
+  c.innerHTML='<div class="empty">Loading report...</div>';
+  const pct=Math.max(0,Math.min(100,Number(document.getElementById('reportDeductionPercent')?.value)||0));
+  google.script.run.withSuccessHandler(function(report){
+    c.innerHTML=buildReportPaper(report,currentReportType,pct);
+     const paper=modal.querySelector('.report-paper');
+     if(paper) paper.classList.add('report-portrait');
+  }).withFailureHandler(function(e){
+    c.innerHTML='<div class="empty">Unable to load report: '+escapeHTML(e&&e.message?e.message:'Unknown error')+'</div>';
+  }).getCroppingFinancialReport(selectedCropping||'',pct);
+}
+
+function formatReportGeneratedDate(value){
+  const d=value instanceof Date?value:new Date(value);
+  const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  let h=d.getHours(); const ap=h>=12?'PM':'AM'; h=h%12||12;
+  return String(d.getDate()).padStart(2,'0')+'-'+months[d.getMonth()]+'-'+d.getFullYear()+', '+String(h).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')+':'+String(d.getSeconds()).padStart(2,'0')+' '+ap;
+}
+
+function formatReportDate(value){
+  if(!value) return '';
+  const raw=String(value).trim();
+  const slash=raw.match(/^(\d{1,2})[\/](\d{1,2})[\/](\d{4})$/);
+  const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  if(slash){
+    const month=Number(slash[1]);
+    const day=Number(slash[2]);
+    const year=Number(slash[3]);
+    if(month>=1&&month<=12&&day>=1&&day<=31) return String(day).padStart(2,'0')+'-'+months[month-1]+'-'+year;
+  }
+  const d=new Date(value);
+  if(isNaN(d.getTime())) return raw;
+  return String(d.getDate()).padStart(2,'0')+'-'+months[d.getMonth()]+'-'+d.getFullYear();
+}
+
+function buildReportPaper(report,type,pct) {
+  const selection=selectedCropping||'All Croppings';
+  const generated=formatReportGeneratedDate(new Date());
+  let html='<div class="report-document">';
+  html+='<div class="report-header"><h2>Fish Pen Report</h2>';
+  html+='<div class="report-header-line"><strong>Report:</strong> '+escapeHTML(type==='caretaker'?'Caretaker':'Cropping Transactions')+'</div>';
+  html+='<div class="report-header-line"><strong>Selection:</strong> '+escapeHTML(selection)+'</div>';
+  html+='<div class="report-header-line"><strong>Generated:</strong> '+escapeHTML(generated)+'</div></div>';
+
+  if(type==='caretaker') {
+    html+='<h3 class="report-section-title">Caretaker</h3>';
+    html+='<table class="portrait-table"><tr><th>Date</th><th>Type</th><th>Category</th><th>Sub category</th><th>Description</th><th>Amount</th></tr>';
+    (report.caretakerTransactions||[]).forEach(function(r){
+      html+='<tr><td>'+escapeHTML(formatReportDate(r.date))+'</td><td>'+escapeHTML(r.type)+'</td><td>'+escapeHTML(r.category)+'</td><td>'+escapeHTML(r.subCategory)+'</td><td>'+escapeHTML(r.description)+'</td><td>'+money(r.amount)+'</td></tr>';
+    });
+    html+='</table><div class="report-total">Caretaker Total: '+money(report.caretakerTotal)+'</div>';
+    html+='</div>';
+    return html;
+  }
+
+  html+='<h3 class="report-section-title">Cropping Transactions</h3>';
+  html+='<div class="report-calculation">';
+  html+='<div class="calc-row"><span>Harvest Net Income</span><strong>'+money(report.harvestSales)+'</strong></div>';
+  html+='<div class="calc-row"><span>Production Expenses (excluding Fixed)</span><strong>− '+money(report.productionExpense)+'</strong></div>';
+  html+='<div class="calc-row"><span>Operation Expenses</span><strong>− '+money(report.operationExpense)+'</strong></div>';
+  html+='<div class="calc-row"><span>Preliminary Profit</span><strong>'+money(report.preliminaryProfit)+'</strong></div>';
+  html+='<div class="calc-row"><span>Caretaker Share (10%)</span><strong>− '+money(report.caretakerShare || report.takeHome || 0)+'</strong></div>';
+  html+='<div class="calc-row report-net-income-row"><span>Remaining Net Income</span><strong>'+money(report.netProfit)+'</strong></div>';
+  html+='</div>';
+  html+='<div class="report-note">Production transactions with Category = Production and Description = Fixed are excluded because they belong to the owner.</div>';
+
+  html+='<h3 class="report-section-title">Transaction Details</h3>';
+  if(!(report.transactions||[]).length) html+='<div class="empty">No transactions.</div>'; else {
+    html+='<table class="portrait-table"><tr><th>Date</th><th>Type</th><th>Category</th><th>Sub category</th><th>Description</th><th>Amount</th></tr>';
+    report.transactions.forEach(function(r){
+      html+='<tr><td>'+escapeHTML(formatReportDate(r.date))+'</td><td>'+escapeHTML(r.type)+'</td><td>'+escapeHTML(r.category)+'</td><td>'+escapeHTML(r.subCategory)+'</td><td>'+escapeHTML(r.description)+'</td><td>'+money(r.amount)+'</td></tr>';
+    });
+    html+='</table>';
+  }
+
+  html+='<h3 class="report-section-title">Harvest</h3>';
+  html+='<table class="portrait-table"><tr><th class="fish-size-cell">Fish Sizes</th><th>Total Boxes</th><th>Total Sales</th><th>Deduction</th><th>Net Income</th></tr>';
+  (report.harvests||[]).forEach(function(h){
+    html+='<tr><td>'+escapeHTML(h.fishSummary)+'</td><td>'+h.totalBoxes+'</td><td>'+money(h.totalSales)+'</td><td>'+money(h.deduction)+'</td><td>'+money(h.netIncome)+'</td></tr>';
+  });
+  html+='</table>';
+  html+='</div>';
+  return html;
+}
+
+function closeReportModal(event) {
+  if(event && event.target !== document.getElementById('reportModal')) return;
+  const m=document.getElementById('reportModal');
+  if(m)m.classList.add('hidden');
+}
+
+function printReportPaper() {
+  const c=document.getElementById('reportModalContent');
+  if(!c)return;
+  const w=window.open('', '_blank');
+  if(!w){ alert('Please allow pop-ups to print the report.'); return; }
+  w.document.write('<html><head><title>Fish Pen Report</title><style>@page{size:A4 portrait;margin:20mm 12mm 12mm 12mm}body{font-family:Arial,sans-serif;color:#111;margin:0;text-align:center}table{border-collapse:collapse;width:100%;margin:10px 0 18px;table-layout:fixed}th,td{border:1px solid #ccc;padding:7px;font-size:10px;text-align:center;white-space:normal;word-break:break-word}th{font-weight:700}.report-total{text-align:center;font-weight:700;margin:6px 0 14px}.report-header{text-align:center;margin-bottom:24px}.report-header h2{margin:0 0 8px;font-size:22px}.report-header-line{margin:3px 0;font-size:12px}.report-section-title{margin:22px 0 9px;font-size:16px}.report-calculation{border:1px solid #d8d8d8;padding:12px;margin:8px 0 18px;font-size:11px;line-height:1.7}.calc-row{display:flex;justify-content:space-between;gap:18px;border-bottom:1px solid #eee;padding:4px 0}.calc-row:last-child{border-bottom:0;font-weight:700}.report-note{font-size:10px;color:#555;margin-top:5px;text-align:center;display:none!important}.portrait-table .fish-size-cell{width:26%;text-align:left!important}.report-net-income-row{display:none!important}.report-section-title{text-align:center}tr{page-break-inside:avoid}</style></head><body>'+c.innerHTML+'</body></html>');
+  w.document.close();
+  w.focus();
+  setTimeout(function(){w.print();},300);
+}
+
+function printReport() { openReportModal('cropping'); }
+
+function downloadCurrentReportPDF() {
+  downloadReportPDF(currentReportType||'cropping');
+}
+
+function downloadReportPDF(type) {
+  const reportType=type==='caretaker'?'caretaker':'cropping';
+  currentReportType=reportType;
+  const pct=Math.max(0,Math.min(100,Number(document.getElementById('reportDeductionPercent')?.value)||0));
+  google.script.run.withSuccessHandler(function(result){
+    if(!result||!result.base64){alert('Unable to create PDF.');return;}
+    const bytes=atob(result.base64);
+    const arr=new Uint8Array(bytes.length);
+    for(let i=0;i<bytes.length;i++)arr[i]=bytes.charCodeAt(i);
+    const blob=new Blob([arr],{type:'application/pdf'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;
+    a.download=result.fileName||'Fish_Pen_Report.pdf';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(function(){URL.revokeObjectURL(url);},1000);
+  }).withFailureHandler(function(e){
+    alert('Unable to create PDF: '+(e&&e.message?e.message:'Unknown error'));
+  }).createReportPDF(selectedCropping||'',pct,reportType);
+}
+
+
+function backupData() {
+  if (!confirm('Export a backup of all current Fish Pen Tracker data?')) return;
+  google.script.run.withSuccessHandler(function(r){
+    try {
+      var bytes = atob(r.base64 || '');
+      var arr = new Uint8Array(bytes.length);
+      for (var i = 0; i < bytes.length; i++) arr[i] = bytes.charCodeAt(i);
+      var blob = new Blob([arr], {type: 'application/json'});
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = r.fileName || 'Fish_Pen_Tracker_Backup.json';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+    } catch (err) {
+      alert('Backup download failed: ' + err.message);
+    }
+  }).withFailureHandler(function(e){
+    alert('Backup failed: ' + (e && e.message ? e.message : 'Unknown error'));
+  }).backupTrackerData();
+}
+function importBackupFile(input) {
+  var file = input && input.files && input.files[0];
+  if (!file) return;
+  if (!confirm('Import this backup? Your current app data will be replaced by the data in the selected backup file.')) {
+    input.value = '';
+    return;
+  }
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var text = String(e.target.result || '');
+    try { JSON.parse(text); } catch (err) { alert('Import failed: The selected file is not a valid Fish Pen Tracker backup.'); input.value=''; return; }
+    var base64 = btoa(unescape(encodeURIComponent(text)));
+    google.script.run.withSuccessHandler(function(r){
+      alert(r.message || 'Backup imported successfully.');
+      location.reload();
+    }).withFailureHandler(function(err){
+      alert('Import failed: ' + (err && err.message ? err.message : 'Unknown error'));
+    }).restoreTrackerBackup(base64);
+  };
+  reader.onerror = function(){ alert('Import failed: Unable to read the selected file.'); };
+  reader.readAsText(file);
+  input.value = '';
+}
+function restoreBackup() { importBackupFile(document.getElementById('backupFileInput')); }
+function restoreData(){
+  var choice=prompt('Type RESTORE BACKUP to restore your saved backup, or RESTORE DELETED to restore a deleted transaction.');
+  if(!choice)return;
+  choice=choice.trim().toUpperCase();
+  if(choice==='RESTORE BACKUP') restoreBackup();
+  else if(choice==='RESTORE DELETED'){ toggleRecentlyDeleted(true); }
+  else alert('Please type RESTORE BACKUP or RESTORE DELETED.');
+}
+function toggleSettings(){ const p=document.getElementById('settingsPanel'); if(p)p.classList.toggle('open'); }
+function toggleRecentlyDeleted(forceOpen){
+  var p=document.getElementById('recentlyDeletedPanel'); if(!p)return;
+  var open=forceOpen===true ? true : p.style.display==='none';
+  p.style.display=open?'block':'none';
+  if(open) loadRecentlyDeleted();
+}
+function loadRecentlyDeleted(){
+  var c=document.getElementById('recentlyDeletedContent'); if(!c)return;
+  google.script.run.withSuccessHandler(function(rows){
+    if(!rows||!rows.length){c.innerHTML='<div class="empty" style="padding:8px 0;">No recently deleted transactions.</div>';return;}
+    var h='<div style="overflow-x:auto;"><table style="min-width:620px;"><tr><th>Date</th><th>Transaction ID</th><th>Category</th><th>Sub category</th><th>Amount</th><th></th></tr>';
+    rows.forEach(function(r){var tid=escapeHTML(r.transactionID);h+='<tr><td>'+escapeHTML(formatReportDate(r.date))+'</td><td>'+tid+'</td><td>'+escapeHTML(r.category)+'</td><td>'+escapeHTML(r.subCategory)+'</td><td>'+money(r.amount)+'</td><td><button class="btn btn-secondary btn-small" data-id="'+tid+'" onclick="restoreDeletedTransaction(this.dataset.id)">Restore</button> <button class="btn btn-danger btn-small" data-id="'+tid+'" onclick="permanentlyDeleteDeletedTransaction(this.dataset.id)">Delete</button></td></tr>';});
+    h+='</table></div>'; c.innerHTML=h;
+  }).withFailureHandler(function(e){c.innerHTML='<div class="empty">Unable to load Recently Deleted: '+escapeHTML(e&&e.message?e.message:'Unknown error')+'</div>';}).getRecentlyDeletedTransactions();
+}
+function restoreDeletedTransaction(id){
+  if(!confirm('Restore transaction '+id+'?'))return;
+  google.script.run.withSuccessHandler(function(r){alert(r.message||'Transaction restored.'); loadRecentlyDeleted(); loadTransactionsPage(); loadDashboard(); loadExpenses(); loadCaretaker(); loadReinvestment(); loadCapitalRecoveryPage(); loadRecords();}).withFailureHandler(function(e){alert('Restore failed: '+(e&&e.message?e.message:'Unknown error'));}).restoreDeletedTransaction(id);
+}
+function permanentlyDeleteDeletedTransaction(id){
+  if(!confirm('Permanently delete transaction '+id+'? This cannot be undone.'))return;
+  google.script.run.withSuccessHandler(function(r){alert(r.message||'Transaction permanently deleted.'); loadRecentlyDeleted();}).withFailureHandler(function(e){alert('Delete failed: '+(e&&e.message?e.message:'Unknown error'));}).permanentlyDeleteDeletedTransaction(id);
+}
+function deleteSelectedData(){
+  var id=prompt('Enter the Transaction ID to permanently remove:');
+  if(!id)return;
+  id=id.trim();
+  if(!confirm('Permanently remove transaction '+id+'? It will first appear in Recently Deleted.'))return;
+  google.script.run.withSuccessHandler(function(r){alert(r.message||'Transaction deleted.'); loadTransactionsPage(); loadDashboard(); loadExpenses(); loadCaretaker(); loadReinvestment(); loadCapitalRecoveryPage(); loadRecords();}).withFailureHandler(function(e){alert('Delete failed: '+(e&&e.message?e.message:'Unknown error'));}).deleteTransaction(id);
+}
+function deleteAllTrackerData(){ if(!confirm('⚠️ Delete ALL business data? A deleted-data copy will be saved first. This will remove all business records.'))return; if(!confirm('This is a destructive action. Continue with DELETE ALL DATA?'))return; google.script.run.withSuccessHandler(function(r){alert(r.message||'All data deleted.'); location.reload();}).withFailureHandler(function(e){alert('Delete failed: '+(e&&e.message?e.message:'Unknown error'));}).deleteTrackerData(); }
+var recordsCache={transactions:[],harvests:[]};
+
+function loadRecords(){
+  const selected=document.getElementById('recordsCropping')?.value||'';
+  google.script.run
+    .withSuccessHandler(function(data){
+      recordsCache = data || {transactions:[],harvests:[],summary:{totalMoneyIn:0,totalMoneyOut:0,totalReinvestment:0,netIncome:0}};
+      renderRecordsSummary(recordsCache.summary || {});
+      renderTransactionRecords(recordsCache.transactions || []);
+      renderHarvestRecords(recordsCache.harvests || []);
+    })
+    .withFailureHandler(function(e){
+      const msg=escapeHTML(e&&e.message?e.message:'Unknown error');
+      const tc=document.getElementById('transactionRecordsContent');
+      const hc=document.getElementById('harvestRecordsContent');
+      if(tc)tc.innerHTML='<div class="empty">Unable to load transaction records: '+msg+'</div>';
+      if(hc)hc.innerHTML='<div class="empty">Unable to load harvest records: '+msg+'</div>';
+    })
+    .getRecordsData(selected);
+}
+
+function renderRecordsSummary(summary){
+  const s=summary||{};
+  const moneyIds=[['recordsTotalMoneyIn',s.totalMoneyIn],['recordsTotalMoneyOut',s.totalMoneyOut],['recordsTotalReinvestment',s.totalReinvestment],['recordsNetIncome',s.netIncome]];
+  moneyIds.forEach(function(item){
+    const el=document.getElementById(item[0]);
+    if(el)el.textContent=money(item[1]);
+  });
+}
+
+function renderTransactionRecords(rows){
+  const c=document.getElementById('transactionRecordsContent');
+  if(!c)return;
+  if(!rows||!rows.length){c.innerHTML='<div class="empty">No transaction records yet.</div>';return;}
+  let html='<div style="overflow-x:auto;"><table><tr><th>Date</th><th>Type</th><th>Category</th><th>Expense Type</th><th>Amount</th></tr>';
+  rows.forEach(function(r){
+    const typeText=String(r.type||'').toUpperCase();
+    const typeClass=typeText==='IN'?'record-type-in':(typeText==='OUT'?'record-type-out':'');
+    html+='<tr><td>'+escapeHTML(formatReportDate(r.date))+'</td><td class="'+typeClass+'"><strong>'+escapeHTML(typeText)+'</strong></td><td>'+escapeHTML(r.category||'Other')+'</td><td>'+escapeHTML(r.expenseType||r.subCategory||'-')+'</td><td>'+money(r.amount)+'</td></tr>';
+  });
+  html+='</table></div>';
+  c.innerHTML=html;
+}
+
+function renderHarvestRecords(rows){
+  const c=document.getElementById('harvestRecordsContent');
+  if(!c)return;
+  if(!rows||!rows.length){c.innerHTML='<div class="empty">No harvest records yet.</div>';return;}
+  let html='<div style="overflow-x:auto;"><table><tr><th>Date</th><th>Fish Quantity (Boxes)</th><th>Total Kilos</th><th>Harvest Income</th><th>Total Remaining Income</th></tr>';
+  rows.forEach(function(r){
+    html+='<tr><td>'+escapeHTML(formatReportDate(r.date))+'</td><td>'+escapeHTML(String(r.fishQuantity||0))+' boxes</td><td>'+escapeHTML(Number(r.totalKilos||0).toLocaleString('en-PH',{maximumFractionDigits:2}))+' kg</td><td>'+money(r.harvestIncome)+'</td><td>'+money(r.remainingNetIncome)+'</td></tr>';
+  });
+  html+='</table></div>';
+  c.innerHTML=html;
+}
+
+function buildRecordsPDFHtml(data){
+  const selection=selectedCropping||'All Croppings';
+  const generated=formatReportGeneratedDate(new Date());
+  const transactions=data&&data.transactions?data.transactions:[];
+  const harvests=data&&data.harvests?data.harvests:[];
+  const summary=data&&data.summary?data.summary:{};
+  let html='<div class="report-document">';
+  html+='<div class="report-header"><h2>Fish Pen Records</h2>';
+  html+='<div class="report-header-line"><strong>Selection:</strong> '+escapeHTML(selection)+'</div>';
+  html+='<div class="report-header-line"><strong>Generated:</strong> '+escapeHTML(generated)+'</div></div>';
+
+  html+='<h3 class="report-section-title">📊 Records Summary</h3>';
+  html+='<table class="records-pdf-table"><tr><th>Total Money In</th><th>Total Money Out</th><th>Total Reinvestment</th><th>Net Income</th></tr>';
+  html+='<tr><td>'+money(summary.totalMoneyIn)+'</td><td>'+money(summary.totalMoneyOut)+'</td><td>'+money(summary.totalReinvestment)+'</td><td>'+money(summary.netIncome)+'</td></tr></table>';
+
+  html+='<h3 class="report-section-title">💰 Transaction Records</h3>';
+  if(!transactions.length){
+    html+='<div class="empty">No transaction records yet.</div>';
+  } else {
+    html+='<table class="records-pdf-table"><tr><th>Date</th><th>Type</th><th>Category</th><th>Expense Type</th><th>Amount</th></tr>';
+    transactions.forEach(function(r){
+      const typeText=String(r.type||'').toUpperCase();
+      const typeClass=typeText==='IN'?'record-type-in':(typeText==='OUT'?'record-type-out':'');
+      html+='<tr><td>'+escapeHTML(formatReportDate(r.date))+'</td><td class="'+typeClass+'"><strong>'+escapeHTML(typeText)+'</strong></td><td>'+escapeHTML(r.category||'Other')+'</td><td>'+escapeHTML(r.expenseType||r.subCategory||'-')+'</td><td>'+money(r.amount)+'</td></tr>';
+    });
+    html+='</table>';
+  }
+
+  html+='<h3 class="report-section-title">🐟 Harvest Records</h3>';
+  if(!harvests.length){
+    html+='<div class="empty">No harvest records yet.</div>';
+  } else {
+    html+='<table class="records-pdf-table"><tr><th>Date</th><th>Fish Quantity (Boxes)</th><th>Total Kilos</th><th>Harvest Income</th><th>Total Remaining Income</th></tr>';
+    harvests.forEach(function(r){
+      html+='<tr><td>'+escapeHTML(formatReportDate(r.date))+'</td><td>'+escapeHTML(String(r.fishQuantity||0))+' boxes</td><td>'+escapeHTML(Number(r.totalKilos||0).toLocaleString('en-PH',{maximumFractionDigits:2}))+' kg</td><td>'+money(r.harvestIncome)+'</td><td>'+money(r.remainingNetIncome)+'</td></tr>';
+    });
+    html+='</table>';
+  }
+  html+='</div>';
+  return html;
+}
+
+function openRecordsPDFView(){
+  const modal=document.getElementById('recordsPdfModal');
+  const c=document.getElementById('recordsPdfContent');
+  if(!modal||!c)return;
+  modal.classList.remove('hidden');
+  c.innerHTML=buildRecordsPDFHtml(recordsCache);
+}
+
+function closeRecordsPDFView(event){
+  if(event && event.target!==document.getElementById('recordsPdfModal')) return;
+  const modal=document.getElementById('recordsPdfModal');
+  if(modal)modal.classList.add('hidden');
+}
+
+function printRecordsPaper(){
+  const modal=document.getElementById('recordsPdfModal');
+  const c=document.getElementById('recordsPdfContent');
+  if(!c)return;
+  if(modal && modal.classList.contains('hidden')) openRecordsPDFView();
+  if(!c.innerHTML) c.innerHTML=buildRecordsPDFHtml(recordsCache);
+  const w=window.open('', '_blank');
+  if(!w){alert('Please allow pop-ups to print the Records report.');return;}
+  w.document.write('<html><head><title>Fish Pen Records</title><style>@page{size:A4 portrait;margin:15mm 10mm 12mm 10mm}body{font-family:Arial,sans-serif;color:#111;margin:0;text-align:center}table{border-collapse:collapse;width:100%;margin:10px 0 18px;table-layout:fixed}th,td{border:1px solid #ccc;padding:7px;font-size:10px;text-align:center;white-space:normal;word-break:break-word}th{font-weight:700}.record-type-in{color:#15803d !important;background:#dcfce7;font-weight:700}.record-type-out{color:#dc2626 !important;background:#fee2e2;font-weight:700}.report-header{text-align:center;margin-bottom:24px}.report-header h2{margin:0 0 8px;font-size:22px}.report-header-line{margin:3px 0;font-size:12px}.report-section-title{margin:22px 0 9px;font-size:16px}.empty{padding:12px}tr{page-break-inside:avoid}</style></head><body>'+c.innerHTML+'</body></html>');
+  w.document.close();w.focus();setTimeout(function(){w.print();},300);
+}
+
+function downloadRecordsPDF(){
+  google.script.run.withSuccessHandler(function(result){
+    if(!result||!result.base64){alert('Unable to create Records PDF.');return;}
+    const binary=atob(result.base64),len=binary.length,arr=new Uint8Array(len);
+    for(let i=0;i<len;i++)arr[i]=binary.charCodeAt(i);
+    const blob=new Blob([arr],{type:'application/pdf'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');a.href=url;a.download=result.fileName||'Fish_Pen_Records.pdf';document.body.appendChild(a);a.click();a.remove();
+    setTimeout(function(){URL.revokeObjectURL(url);},1000);
+  }).withFailureHandler(function(e){
+    alert('Unable to create Records PDF: '+(e&&e.message?e.message:'Unknown error'));
+  }).createRecordsPDF(selectedCropping||'');
+}
+
+
+/* ==========================================================
+   ROBUST NAVIGATION HANDLER
+   Uses data-page attributes / onclick fallback so one broken
+   page loader cannot stop the sidebar from switching pages.
+========================================================== */
+
+document.addEventListener("click", function(event) {
+
+  var target = event.target;
+
+  while (target && target !== document &&
+         !(target.classList && target.classList.contains("nav-btn"))) {
+    target = target.parentElement;
+  }
+
+  if (!target || target === document) return;
+
+  var inline = target.getAttribute("onclick") || "";
+  var match = inline.match(/showPage\(['"]([^'"]+)['"]/);
+
+  if (!match) return;
+
+  event.preventDefault();
+  event.stopImmediatePropagation();
+  showPage(match[1], target);
+  return false;
+
+}, true);
+
+
+/* ==========================================================
+   START
+========================================================== */
+
+window.onload = function() {
+
+  try { loadTheme(); } catch (e) { console.error(e); }
+  try { sortTransactionDropdowns(); } catch (e) { console.error(e); }
+  try { restoreSidebarState();
+  updatePageCroppingLabels(); } catch (e) { console.error(e); }
+  try { loadCroppings(); } catch (e) { console.error(e); }
+  try { loadTransactionsPage(); } catch (e) { console.error(e); }
+  try { prepareExpenseForm(); prepareCaretakerForm(); } catch (e) { console.error(e); }
+  try { loadDashboard(); } catch (e) { console.error(e); }
+  try { loadHarvestRecordsPage(); } catch (e) { console.error(e); }
+  try { } catch (e) { console.error(e); }
+  try { loadHistory(); } catch (e) { console.error(e); }
+  try { loadPrintReport(); } catch (e) { console.error(e); }
+
+};
+
+</script>
+
+
+<div id="transactionEditModal" class="transaction-edit-modal hidden" onclick="closeTransactionEditModal(event)">
+  <div class="transaction-edit-paper" onclick="event.stopPropagation()">
+    <div class="transaction-edit-header">
+      <h3>✏️ Edit Transaction</h3>
+      <button class="btn btn-secondary" onclick="closeTransactionEditModal()">Close</button>
+    </div>
+    <input type="hidden" id="editTransactionID">
+    <div class="form-grid">
+      <div class="form-group"><label>Transaction ID</label><input id="editTransactionIDDisplay" type="text" readonly></div>
+      <div class="form-group"><label>Date</label><input id="editTransactionDate" type="date"></div>
+      <div class="form-group"><label>Cropping ID</label><input id="editTransactionCroppingID" type="text" readonly></div>
+      <div class="form-group"><label>Type</label><select id="editTransactionType"><option value="">Select Type</option><option value="In">In</option><option value="Out">Out</option></select></div>
+      <div class="form-group"><label>Category</label><select id="editTransactionCategory" onchange="toggleEditOtherCategory()"><option value="">Select Category</option><option value="Caretaker">Caretaker</option><option value="Capital">Capital</option><option value="Legal Requirements">Legal Requirements</option><option value="Maintenance">Maintenance</option><option value="Operation">Operation</option><option value="Other">Other</option><option value="Production">Production</option><option value="Reinvestment">Reinvestment</option></select></div>
+      <div class="form-group" id="editTransactionOtherCategoryGroup" style="display:none;"><label>Other Category</label><input id="editTransactionOtherCategory" type="text" placeholder="Enter category"></div>
+      <div class="form-group"><label>Sub category</label><select id="editTransactionExpenseType" onchange="toggleEditOtherExpenseType()"><option value="">Select Sub category</option><option value="Additional Capital">Additional Capital</option><option value="Bamboo">Bamboo</option><option value="Cigarette">Cigarette</option><option value="Feeds">Feeds</option><option value="Fingerlings">Fingerlings</option><option value="Gasoline">Gasoline</option><option value="Harvest Labor">Harvest Labor</option><option value="Labor">Labor</option><option value="Nets">Nets</option><option value="Original Capital">Original Capital</option><option value="Other">Other</option><option value="Rice">Rice</option><option value="Salary">Salary</option></select></div>
+      <div class="form-group" id="editTransactionOtherExpenseGroup" style="display:none;"><label>Other Sub category</label><input id="editTransactionOtherExpenseType" type="text" placeholder="Enter sub category"></div>
+      <div class="form-group"><label>Amount</label><input id="editTransactionAmount" type="number" min="0" step="0.01"></div>
+      <div class="form-group"><label>Payment Method</label><select id="editTransactionPaymentMethod"><option value="">Select Payment Method</option><option value="Cash">Cash</option><option value="Debt">Debt</option></select></div>
+      <div class="form-group"><label>Description</label><select id="editTransactionDescriptionType" onchange="toggleEditOtherDescription()"><option value="">Select Description</option><option value="Feeds Fund">Feeds Fund</option><option value="Fixed">Fixed</option><option value="Other">Other</option></select></div>
+      <div class="form-group" id="editTransactionOtherDescriptionGroup" style="display:none;"><label>Other Description</label><input id="editTransactionNotes" type="text" placeholder="Enter description"></div>
+    </div>
+    <div class="transaction-edit-actions">
+      <button class="btn btn-secondary" onclick="closeTransactionEditModal()">Cancel</button>
+      <button class="btn btn-primary" id="saveEditedTransactionButton" onclick="saveEditedTransaction()">Save Changes</button>
+    </div>
+    <div id="editTransactionMessage" class="status status-info" style="margin-top:13px;display:none;"></div>
+  </div>
+</div></body>
+</html>
