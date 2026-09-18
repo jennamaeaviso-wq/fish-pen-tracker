@@ -811,6 +811,13 @@
     .transaction-edit-header h3 { margin:0; font-size:20px; }
     .transaction-edit-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:18px; }
 </style>
+<!-- Fish Pen Tracker PWA -->
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#52796F">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Fish Pen Tracker">
+
 </head>
 
 <body>
@@ -1554,19 +1561,12 @@
 </div>
 
 
-<!-- Fish Pen Tracker PWA -->
-<link rel="manifest" href="./manifest.json">
-<meta name="theme-color" content="#52796F">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="Fish Pen Tracker">
-
 <script>
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", function () {
-    navigator.serviceWorker.register("./sw.js")
-      .then(function () {
-        console.log("Fish Pen Tracker service worker registered.");
+    navigator.serviceWorker.register("./sw.js", { scope: "./" })
+      .then(function (registration) {
+        console.log("Fish Pen Tracker service worker registered:", registration.scope);
       })
       .catch(function (error) {
         console.error("Service worker registration failed:", error);
