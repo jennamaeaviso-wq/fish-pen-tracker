@@ -1554,7 +1554,28 @@
 </div>
 
 
-<script>\n    /* ==========================================================\n       GITHUB PAGES -> GOOGLE APPS SCRIPT BRIDGE\n       Keeps the existing google.script.run calls unchanged.\n    ========================================================== */\n\n    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwJ-kA2n5ZjFDot5pEVB4RFOnill-UeeuXsBay_YXrRdOg33fVOxfq6QzM2m8Tf5dhD/exec";\n\n    function createGoogleScriptRunBridge() {\n      let successHandler = null;\n      let failureHandler = null;\n      let bridge;\n\n      bridge = new Proxy({}, {\n        get: function(target, property) {\n          if (property === "withSuccessHandler") {\n            return function(fn) {\n              successHandler = typeof fn === "function" ? fn : null;\n              return bridge;\n            };\n          }\n\n          if (property === "withFailureHandler") {\n            return function(fn) {\n              failureHandler = typeof fn === "function" ? fn : null;\n              return bridge;\n            };\n          }\n\n          return function(...args) {\n            const action = String(property);\n\n            fetch(APPS_SCRIPT_URL, {\n              method: "POST",\n              headers: {\n                "Content-Type": "text/plain;charset=utf-8"\n              },\n              body: JSON.stringify({\n                action: action,\n                args: args\n              }),\n              redirect: "follow"\n            })\n            .then(function(response) {\n              if (!response.ok) {\n                throw new Error("Apps Script returned HTTP " + response.status);\n              }\n              return response.text();\n            })\n            .then(function(text) {\n              let result;\n\n              try {\n                result = JSON.parse(text);\n              } catch (err) {\n                throw new Error("Invalid response from Apps Script.");\n              }\n\n              if (!result || result.success !== true) {\n                throw new Error(\n                  result && result.error\n                    ? result.error\n                    : "Apps Script request failed."\n                );\n              }\n\n              if (successHandler) {\n                successHandler(result.data);\n              }\n            })\n            .catch(function(error) {\n              console.error("Apps Script API error:", error);\n\n              if (failureHandler) {\n                failureHandler({\n                  message: error && error.message\n                    ? error.message\n                    : "Unable to connect to Apps Script."\n                });\n              }\n            });\n\n            return bridge;\n          };\n        }\n      });\n\n      return bridge;\n    }\n\n    window.google = window.google || {};\n    window.google.script = window.google.script || {};\n\n    Object.defineProperty(window.google.script, "run", {\n      configurable: true,\n      get: function() {\n        return createGoogleScriptRunBridge();\n      }\n    });\n\n
+<!-- Fish Pen Tracker PWA -->
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#52796F">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Fish Pen Tracker">
+
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", function () {
+    navigator.serviceWorker.register("./sw.js")
+      .then(function () {
+        console.log("Fish Pen Tracker service worker registered.");
+      })
+      .catch(function (error) {
+        console.error("Service worker registration failed:", error);
+      });
+  });
+}
+</script>
+
+<script>
 
 /* ==========================================================
    GLOBAL
