@@ -48,6 +48,26 @@
       --success-light: #25492e;
       --shadow: 0 5px 20px rgba(0,0,0,.22);
     }
+    body.ocean {
+      --bg: #e8f7fb;
+      --sidebar: #c9edf4;
+      --sidebar-dark: #a9dfe9;
+      --card: #f8fdff;
+      --card2: #e1f3f8;
+      --text: #16465b;
+      --muted: #5f8290;
+      --border: #b9dce5;
+      --primary: #2389aa;
+      --primary-dark: #176f8d;
+      --accent: #74c5d8;
+      --danger: #c96868;
+      --danger-light: #f7dddd;
+      --success: #3c9a7a;
+      --success-light: #d9f1e8;
+      --shadow: 0 5px 20px rgba(20,105,130,.10);
+    }
+    body.ocean .brand-icon { filter: drop-shadow(0 3px 4px rgba(20,105,130,.20)); }
+    .theme-choice-row { display:flex; flex-direction:column; gap:7px; margin-top:0; }
 
     body {
       margin: 0;
@@ -810,14 +830,14 @@
     .transaction-edit-header { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:18px; }
     .transaction-edit-header h3 { margin:0; font-size:20px; }
     .transaction-edit-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:18px; }
+    .transaction-add-modal { position:fixed; inset:0; z-index:5900; background:rgba(0,0,0,.45); display:flex; align-items:center; justify-content:center; padding:20px; overflow:auto; }
+    .transaction-add-modal.hidden { display:none; }
+    .transaction-add-paper { width:min(900px,96vw); max-height:94vh; overflow:auto; background:var(--card); color:var(--text); padding:24px; border:1px solid var(--border); border-radius:16px; box-shadow:0 20px 60px rgba(0,0,0,.25); }
+    .transaction-add-header { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:18px; }
+    .transaction-add-header h3 { margin:0; font-size:20px; }
+    .transaction-add-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:18px; }
+    .transactions-add-toolbar { display:flex; justify-content:flex-end; margin-bottom:15px; }
 </style>
-<!-- Fish Pen Tracker PWA -->
-<link rel="manifest" href="./manifest.json">
-<meta name="theme-color" content="#52796F">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="Fish Pen Tracker">
-
 </head>
 
 <body>
@@ -851,7 +871,10 @@
     <button class="nav-btn" onclick="showPage('records', this)"><span class="nav-icon">🗂️</span>Records</button>
 
     <div class="theme-box">
-      <button class="theme-btn" onclick="toggleTheme()" id="themeButton">🌙 Night Mode</button>
+      <div class="theme-choice-row">
+        <button class="theme-btn" onclick="toggleTheme()" id="themeButton">🌙 Night Mode</button>
+        <button class="theme-btn" onclick="setOceanTheme()" id="oceanThemeButton">🌊 Ocean Theme</button>
+      </div>
       <button class="theme-btn" style="margin-top:7px;" onclick="toggleSettings()" id="settingsButton">⚙️ Settings</button>
       <div id="settingsPanel" class="settings-panel">
         <div class="settings-item"><strong>🧹 Clear All Sample Data</strong><span>Remove only demo/sample transactions and records. Your real data is kept.</span><button class="btn btn-danger" style="width:100%;margin-top:7px;" onclick="clearAllDemoData()">Clear All Sample Data</button></div>
@@ -1005,39 +1028,10 @@
       </div>
 
       <div class="section">
-
-        <div class="section-title">
-          <h3>➕ Add Transaction</h3>
+        <div class="transactions-add-toolbar">
+          <button type="button" class="btn btn-primary" onclick="openAddTransactionModal()">＋ Add Transaction</button>
         </div>
-
-        <div class="form-grid">
-          <div class="form-group"><label>Transaction ID</label><input id="transactionID" type="text" readonly placeholder="Automatic — generated when saved"></div>
-          <div class="form-group"><label>Date</label><input id="transactionDate" type="date"></div>
-          <div class="form-group"><label>Cropping ID</label><input id="transactionCroppingID" type="text" readonly placeholder="Automatic"></div>
-          
-          <div class="form-group"><label>Type</label><select id="transactionType"><option value="">Select Type</option><option value="In">In</option><option value="Out">Out</option></select></div>
-          <div class="form-group"><label>Category</label><select id="transactionCategory" onchange="toggleOtherCategory()"><option value="">Select Category</option><option value="Caretaker">Caretaker</option><option value="Capital">Capital</option><option value="Legal Requirements">Legal Requirements</option><option value="Maintenance">Maintenance</option><option value="Operation">Operation</option><option value="Other">Other</option><option value="Production">Production</option><option value="Reinvestment">Reinvestment</option></select></div>
-          <div class="form-group" id="transactionOtherCategoryGroup" style="display:none;"><label>Other Category</label><input id="transactionOtherCategory" type="text" placeholder="Enter category"></div>
-          <div class="form-group"><label>Sub category</label><select id="transactionExpenseType" onchange="toggleOtherExpenseType()"><option value="">Select Sub category</option><option value="Additional Capital">Additional Capital</option><option value="Bamboo">Bamboo</option><option value="Cigarette">Cigarette</option><option value="Feeds">Feeds</option><option value="Fingerlings">Fingerlings</option><option value="Gasoline">Gasoline</option><option value="Harvest Labor">Harvest Labor</option><option value="Labor">Labor</option><option value="Nets">Nets</option><option value="Original Capital">Original Capital</option><option value="Other">Other</option><option value="Rice">Rice</option><option value="Salary">Salary</option></select></div>
-          <div class="form-group" id="transactionOtherExpenseGroup" style="display:none;"><label>Other Sub category</label><input id="transactionOtherExpenseType" type="text" placeholder="Enter sub category"></div>
-          <div class="form-group"><label>Amount</label><input id="transactionAmount" type="number" min="0" step="0.01" placeholder="0.00"></div>
-          <div class="form-group"><label>Payment Method</label><select id="transactionPaymentMethod"><option value="">Select Payment Method</option><option value="Cash">Cash</option><option value="Debt">Debt</option></select></div>
-          <div class="form-group"><label>Description</label>
-            <select id="transactionDescriptionType" onchange="toggleOtherDescription()">
-              <option value="">Select Description</option>
-              <option value="Feeds Fund">Feeds Fund</option><option value="Fixed">Fixed</option><option value="Other">Other</option>
-            </select>
-          </div>
-          <div class="form-group" id="transactionOtherDescriptionGroup" style="display:none;"><label>Other Description</label><input id="transactionNotes" type="text" placeholder="Enter description"></div>
-        </div>
-
-        <div class="button-row">
-          <button class="btn btn-primary" onclick="saveTransaction()">+ Save Transaction</button>
-          <button class="btn btn-secondary" onclick="resetTransactionForm()">Clear</button>
-          <button class="btn btn-danger" onclick="saveTransaction()">Save Transaction</button>
-        </div>
-
-        <div id="transactionMessage" class="status status-info" style="margin-top:13px;"></div>
+        <div id="transactionMessage" class="status status-info" style="margin-top:0;display:none;"></div>
       </div>
 
       <div class="section">
@@ -1562,20 +1556,107 @@
 
 
 <script>
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", function () {
-    navigator.serviceWorker.register("./sw.js", { scope: "./" })
-      .then(function (registration) {
-        console.log("Fish Pen Tracker service worker registered:", registration.scope);
-      })
-      .catch(function (error) {
-        console.error("Service worker registration failed:", error);
-      });
-  });
-}
-</script>
+    /* ==========================================================
+       GITHUB PAGES -> GOOGLE APPS SCRIPT BRIDGE
+       Keeps the existing google.script.run calls unchanged.
+    ========================================================== */
 
-<script>
+    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwJ-kA2n5ZjFDot5pEVB4RFOnill-UeeuXsBay_YXrRdOg33fVOxfq6QzM2m8Tf5dhD/exec";
+
+    function createGoogleScriptRunBridge() {
+      let successHandler = null;
+      let failureHandler = null;
+
+      const bridgeTarget = {};
+
+      bridgeTarget.withSuccessHandler = function(fn) {
+        successHandler = typeof fn === "function" ? fn : null;
+        return bridge;
+      };
+
+      bridgeTarget.withFailureHandler = function(fn) {
+        failureHandler = typeof fn === "function" ? fn : null;
+        return bridge;
+      };
+
+      const bridge = new Proxy(bridgeTarget, {
+        get: function(target, property) {
+          if (property in target) return target[property];
+
+          return function(...args) {
+            const action = String(property);
+            const onSuccess = successHandler;
+            const onFailure = failureHandler;
+
+            fetch(APPS_SCRIPT_URL, {
+              method: "POST",
+              headers: {
+                "Content-Type": "text/plain;charset=utf-8"
+              },
+              body: JSON.stringify({
+                action: action,
+                args: args
+              }),
+              redirect: "follow"
+            })
+            .then(function(response) {
+              if (!response.ok) {
+                throw new Error("Apps Script returned HTTP " + response.status);
+              }
+              return response.text();
+            })
+            .then(function(text) {
+              let result;
+
+              try {
+                result = JSON.parse(text);
+              } catch (err) {
+                throw new Error("Invalid response from Apps Script.");
+              }
+
+              if (!result || result.success !== true) {
+                throw new Error(
+                  result && result.error
+                    ? result.error
+                    : "Apps Script request failed."
+                );
+              }
+
+              if (onSuccess) {
+                onSuccess(result.data);
+              }
+            })
+            .catch(function(error) {
+              console.error("Apps Script API error:", error);
+
+              if (onFailure) {
+                onFailure({
+                  message: error && error.message
+                    ? error.message
+                    : "Unable to connect to Apps Script."
+                });
+              }
+            });
+
+            return bridge;
+          };
+        }
+      });
+
+      return bridge;
+    }
+
+    window.google = window.google || {};
+    window.google.script = window.google.script || {};
+
+    Object.defineProperty(window.google.script, "run", {
+      configurable: true,
+      get: function() {
+        return createGoogleScriptRunBridge();
+      }
+    });
+
+
 
 /* ==========================================================
    GLOBAL
@@ -1752,38 +1833,32 @@ function showPage(pageID, button) {
    THEME
 ========================================================== */
 
-function toggleTheme() {
+function applyTheme(theme) {
+  document.body.classList.remove("night", "ocean");
+  if (theme === "night") document.body.classList.add("night");
+  if (theme === "ocean") document.body.classList.add("ocean");
 
-  document.body.classList.toggle("night");
+  localStorage.setItem("fishPenTheme", theme);
 
-  const night =
-    document.body.classList.contains("night");
-
-  localStorage.setItem(
-    "fishPenTheme",
-    night ? "night" : "day"
-  );
-
-  document.getElementById("themeButton").textContent =
-    night ? "☀️ Day Mode" : "🌙 Night Mode";
-
+  const themeButton = document.getElementById("themeButton");
+  const oceanButton = document.getElementById("oceanThemeButton");
+  if (themeButton) themeButton.textContent = theme === "night" ? "☀️ Day Mode" : "🌙 Night Mode";
+  if (oceanButton) oceanButton.textContent = theme === "ocean" ? "🐟 Ocean Theme ✓" : "🌊 Ocean Theme";
 }
 
+function toggleTheme() {
+  const current = document.body.classList.contains("night") ? "night"
+                : document.body.classList.contains("ocean") ? "ocean" : "day";
+  applyTheme(current === "night" ? "day" : "night");
+}
+
+function setOceanTheme() {
+  applyTheme("ocean");
+}
 
 function loadTheme() {
-
-  const saved =
-    localStorage.getItem("fishPenTheme");
-
-  if (saved === "night") {
-
-    document.body.classList.add("night");
-
-    document.getElementById("themeButton").textContent =
-      "☀️ Day Mode";
-
-  }
-
+  const saved = localStorage.getItem("fishPenTheme") || "day";
+  applyTheme(saved === "night" || saved === "ocean" ? saved : "day");
 }
 
 
@@ -3353,8 +3428,8 @@ function saveTransaction() {
   const amount=Number(document.getElementById("transactionAmount").value)||0;
   const paymentMethod=document.getElementById("transactionPaymentMethod").value;
   if(!date||!type||!category||!selectedExpenseType||!expenseType||!descriptionType||!description||amount<=0||!paymentMethod){alert("Please complete Date, Type, Category, Sub category, Description, Amount and Payment Method.");return;}
-  const button=document.querySelector('#transactions .btn-primary'); if(button)button.disabled=true;
-  google.script.run.withSuccessHandler(function(result){if(button)button.disabled=false;const m=document.getElementById("transactionMessage");m.className="status status-success";m.textContent="Transaction saved: "+result.transactionID;resetTransactionForm();loadTransactionsPage();loadDashboard();loadExpenses();loadCaretaker();loadReinvestment();loadCapitalRecoveryPage();loadRecords();}).withFailureHandler(function(error){if(button)button.disabled=false;document.getElementById("transactionMessage").className="status status-error";document.getElementById("transactionMessage").textContent=error&&error.message?error.message:"Unable to save transaction.";}).addTransaction(date,selectedCropping||document.getElementById("transactionCroppingID").value,type,category,expenseType,amount,paymentMethod,description);
+  const button=document.getElementById("saveTransactionButton"); if(button)button.disabled=true;
+  google.script.run.withSuccessHandler(function(result){if(button)button.disabled=false;const m=document.getElementById("transactionMessage");m.className="status status-success";m.textContent="Transaction saved: "+result.transactionID;closeAddTransactionModal();resetTransactionForm();loadTransactionsPage();loadDashboard();loadExpenses();loadCaretaker();loadReinvestment();loadCapitalRecoveryPage();loadRecords();}).withFailureHandler(function(error){if(button)button.disabled=false;document.getElementById("transactionMessage").className="status status-error";document.getElementById("transactionMessage").textContent=error&&error.message?error.message:"Unable to save transaction.";}).addTransaction(date,selectedCropping||document.getElementById("transactionCroppingID").value,type,category,expenseType,amount,paymentMethod,description);
 }
 
 function setEditCategoryValue(value) {
@@ -3408,6 +3483,23 @@ function toggleEditOtherDescription() {
   const group = document.getElementById("editTransactionOtherDescriptionGroup");
   if (!select || !group) return;
   group.style.display = select.value === "Other" ? "block" : "none";
+}
+
+function openAddTransactionModal() {
+  const modal = document.getElementById("transactionAddModal");
+  if (!modal) return;
+  resetTransactionForm();
+  updateTransactionCropping();
+  const message = document.getElementById("transactionMessage");
+  if (message) { message.textContent = ""; message.style.display = "none"; }
+  modal.classList.remove("hidden");
+}
+
+function closeAddTransactionModal(event) {
+  const modal = document.getElementById("transactionAddModal");
+  if (!modal) return;
+  if (event && event.target !== modal) return;
+  modal.classList.add("hidden");
 }
 
 function editTransaction(transactionID) {
@@ -3549,7 +3641,7 @@ function loadTransactionsPage() {
     .withSuccessHandler(function(data) {
       const container = document.getElementById("transactionsTable");
       if (!data || !data.length) {
-        container.innerHTML = '<div class="empty">No transactions yet. Add your first transaction above.</div>';
+        container.innerHTML = '<div class="empty">No transactions yet. Click + Add Transaction to add your first transaction.</div>';
         return;
       }
 
@@ -4527,6 +4619,33 @@ window.onload = function() {
 
 </script>
 
+
+<div id="transactionAddModal" class="transaction-add-modal hidden" onclick="closeAddTransactionModal(event)">
+  <div class="transaction-add-paper" onclick="event.stopPropagation()">
+    <div class="transaction-add-header">
+      <h3>➕ Add Transaction</h3>
+      <button type="button" class="btn btn-secondary" onclick="closeAddTransactionModal()">Close</button>
+    </div>
+    <div class="form-grid">
+      <div class="form-group"><label>Transaction ID</label><input id="transactionID" type="text" readonly placeholder="Automatic — generated when saved"></div>
+      <div class="form-group"><label>Date</label><input id="transactionDate" type="date"></div>
+      <div class="form-group"><label>Cropping ID</label><input id="transactionCroppingID" type="text" readonly placeholder="Automatic"></div>
+      <div class="form-group"><label>Type</label><select id="transactionType"><option value="">Select Type</option><option value="In">In</option><option value="Out">Out</option></select></div>
+      <div class="form-group"><label>Category</label><select id="transactionCategory" onchange="toggleOtherCategory()"><option value="">Select Category</option><option value="Caretaker">Caretaker</option><option value="Capital">Capital</option><option value="Legal Requirements">Legal Requirements</option><option value="Maintenance">Maintenance</option><option value="Operation">Operation</option><option value="Other">Other</option><option value="Production">Production</option><option value="Reinvestment">Reinvestment</option></select></div>
+      <div class="form-group" id="transactionOtherCategoryGroup" style="display:none;"><label>Other Category</label><input id="transactionOtherCategory" type="text" placeholder="Enter category"></div>
+      <div class="form-group"><label>Sub category</label><select id="transactionExpenseType" onchange="toggleOtherExpenseType()"><option value="">Select Sub category</option><option value="Additional Capital">Additional Capital</option><option value="Bamboo">Bamboo</option><option value="Cigarette">Cigarette</option><option value="Feeds">Feeds</option><option value="Fingerlings">Fingerlings</option><option value="Gasoline">Gasoline</option><option value="Harvest Labor">Harvest Labor</option><option value="Labor">Labor</option><option value="Nets">Nets</option><option value="Original Capital">Original Capital</option><option value="Other">Other</option><option value="Rice">Rice</option><option value="Salary">Salary</option></select></div>
+      <div class="form-group" id="transactionOtherExpenseGroup" style="display:none;"><label>Other Sub category</label><input id="transactionOtherExpenseType" type="text" placeholder="Enter sub category"></div>
+      <div class="form-group"><label>Amount</label><input id="transactionAmount" type="number" min="0" step="0.01" placeholder="0.00"></div>
+      <div class="form-group"><label>Payment Method</label><select id="transactionPaymentMethod"><option value="">Select Payment Method</option><option value="Cash">Cash</option><option value="Debt">Debt</option></select></div>
+      <div class="form-group"><label>Description</label><select id="transactionDescriptionType" onchange="toggleOtherDescription()"><option value="">Select Description</option><option value="Feeds Fund">Feeds Fund</option><option value="Fixed">Fixed</option><option value="Other">Other</option></select></div>
+      <div class="form-group" id="transactionOtherDescriptionGroup" style="display:none;"><label>Other Description</label><input id="transactionNotes" type="text" placeholder="Enter description"></div>
+    </div>
+    <div class="transaction-add-actions">
+      <button type="button" class="btn btn-secondary" onclick="resetTransactionForm()">Clear</button>
+      <button type="button" class="btn btn-primary" id="saveTransactionButton" onclick="saveTransaction()">＋ Save Transaction</button>
+    </div>
+  </div>
+</div>
 
 <div id="transactionEditModal" class="transaction-edit-modal hidden" onclick="closeTransactionEditModal(event)">
   <div class="transaction-edit-paper" onclick="event.stopPropagation()">
