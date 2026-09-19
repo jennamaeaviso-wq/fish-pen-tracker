@@ -1,21 +1,19 @@
-const CACHE_NAME = "fish-pen-tracker-v1";
+const CACHE_NAME = "fish-pen-tracker-v2";
 
 const APP_FILES = [
   "./",
-  "./index.html",
+  "./Index.html",
   "./manifest.json",
-  "./fish-pen-icon-192.png",
-  "./fish-pen-icon-512.png"
+  "./icon-192.png",
+  "./icon-512.png"
 ];
 
 self.addEventListener("install", event => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => {
-      return cache.addAll(APP_FILES);
-    })
+    caches.open(CACHE_NAME)
+      .then(cache => cache.addAll(APP_FILES))
+      .then(() => self.skipWaiting())
   );
-
-  self.skipWaiting();
 });
 
 self.addEventListener("activate", event => {
@@ -26,10 +24,8 @@ self.addEventListener("activate", event => {
           .filter(key => key !== CACHE_NAME)
           .map(key => caches.delete(key))
       );
-    })
+    }).then(() => self.clients.claim())
   );
-
-  self.clients.claim();
 });
 
 self.addEventListener("fetch", event => {
@@ -38,11 +34,13 @@ self.addEventListener("fetch", event => {
   event.respondWith(
     fetch(event.request)
       .then(response => {
-        const responseClone = response.clone();
+        if (response && response.ok) {
+          const responseClone = response.clone();
 
-        caches.open(CACHE_NAME).then(cache => {
-          cache.put(event.request, responseClone);
-        });
+          caches.open(CACHE_NAME).then(cache => {
+            cache.put(event.request, responseClone);
+          });
+        }
 
         return response;
       })
