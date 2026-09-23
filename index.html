@@ -4690,6 +4690,35 @@ if ("serviceWorker" in navigator) {
 }
 </script>
 
+  <script>
+/* ==========================================================
+   FISH PEN TRACKER - PWA SERVICE WORKER REGISTRATION
+   ========================================================== */
+
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", function () {
+
+    navigator.serviceWorker
+      .register("./service-worker.js", {
+        scope: "./"
+      })
+      .then(function (registration) {
+        console.log(
+          "Fish Pen Tracker Service Worker registered:",
+          registration.scope
+        );
+      })
+      .catch(function (error) {
+        console.error(
+          "Fish Pen Tracker Service Worker registration failed:",
+          error
+        );
+      });
+
+  });
+}
+</script>
+
 </body>
 </html>
 
