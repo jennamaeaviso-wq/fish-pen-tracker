@@ -1,25 +1,10 @@
 {
-  "name": "Fish Pen Tracker",
+  "name": "Fish Pen Money Tracker",
   "short_name": "Fish Pen",
-  "description": "Fish Pen Money and Production Management System",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "orientation": "portrait",
-  "theme_color": "#52796F",
   "background_color": "#f4efe3",
-  "icons": [
-    {
-      "src": "./icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "./icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any"
-    }
-  ]
+  "theme_color": "#789b78",
+  "description": "Fish Pen cropping and harvest tracker with offline Harvest drafts."
 }
