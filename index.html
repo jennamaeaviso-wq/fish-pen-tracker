@@ -4,9 +4,8 @@
 <head>
   <base target="_top">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#52796F">
-  <link rel="manifest" href="./manifest.json">
-  <link rel="apple-touch-icon" href="./icon-192.png">
+  <meta name="theme-color" content="#789b78">
+  <link rel="manifest" href="./manifest.webmanifest">
 
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap');
@@ -845,6 +844,7 @@
 </head>
 
 <body>
+  <div id="offlineStatus" style="display:none;position:sticky;top:0;z-index:9999;padding:8px 12px;text-align:center;background:#fff1c7;color:#684d00;font-weight:700;font-size:12px;">Offline mode: Harvest changes are saved on this device and will sync when connection returns.</div>
 <button class="btn btn-secondary menu-toggle no-print" onclick="toggleSidebar()" title="Collapse navigation">☰</button>
 
 <div class="app">
@@ -1570,26 +1570,37 @@
     function createGoogleScriptRunBridge() {
       let successHandler = null;
       let failureHandler = null;
-      let bridge;
 
-      bridge = new Proxy({}, {
+      const bridgeTarget = {};
+
+      bridgeTarget.withSuccessHandler = function(fn) {
+        successHandler = typeof fn === "function" ? fn : null;
+        return bridge;
+      };
+
+      bridgeTarget.withFailureHandler = function(fn) {
+        failureHandler = typeof fn === "function" ? fn : null;
+        return bridge;
+      };
+
+      const bridge = new Proxy(bridgeTarget, {
         get: function(target, property) {
-          if (property === "withSuccessHandler") {
-            return function(fn) {
-              successHandler = typeof fn === "function" ? fn : null;
-              return bridge;
-            };
-          }
-
-          if (property === "withFailureHandler") {
-            return function(fn) {
-              failureHandler = typeof fn === "function" ? fn : null;
-              return bridge;
-            };
-          }
+          if (property in target) return target[property];
 
           return function(...args) {
             const action = String(property);
+            const onSuccess = successHandler;
+            const onFailure = failureHandler;
+
+            const offlineQueueable = ["saveTemporaryHarvest", "addPullOutRecord", "removePullOutRecord", "clearTemporaryHarvest"];
+            if (!navigator.onLine && offlineQueueable.indexOf(action) >= 0) {
+              if (action === "addPullOutRecord" && !args[5]) {
+                args[5] = "POOFF-" + Date.now() + "-" + Math.floor(Math.random() * 100000);
+              }
+              enqueueOfflineMutation(action, args);
+              if (onSuccess) onSuccess({ success: true, offlineQueued: true, id: args[5] || "" });
+              return bridge;
+            }
 
             fetch(APPS_SCRIPT_URL, {
               method: "POST",
@@ -1625,15 +1636,25 @@
                 );
               }
 
-              if (successHandler) {
-                successHandler(result.data);
+              if (onSuccess) {
+                onSuccess(result.data);
               }
             })
             .catch(function(error) {
               console.error("Apps Script API error:", error);
+              if (offlineQueueable.indexOf(action) >= 0 &&
+                  (error instanceof TypeError || !navigator.onLine)) {
+                if (action === "addPullOutRecord" && !args[5]) {
+                  args[5] = "POOFF-" + Date.now() + "-" + Math.floor(Math.random() * 100000);
+                }
+                enqueueOfflineMutation(action, args);
+                if (onSuccess) onSuccess({ success: true, offlineQueued: true, id: args[5] || "" });
+                updateOfflineStatus();
+                return;
+              }
 
-              if (failureHandler) {
-                failureHandler({
+              if (onFailure) {
+                onFailure({
                   message: error && error.message
                     ? error.message
                     : "Unable to connect to Apps Script."
@@ -1666,12 +1687,222 @@
 ========================================================== */
 
 let selectedCropping = "";
+let harvestCroppingID = localStorage.getItem("fishPenHarvestCroppingID") || "";
+let harvestSaveTimer = null;
 let harvestEntries = [];
 let actionHistory = [];
 let pullOutHistory = [];
 let currentReportType = "cropping";
 
 let collapsed = {};
+
+
+/* ==========================================================
+   HARVEST AUTO-CROPPING + LOCAL AUTOSAVE
+========================================================== */
+
+const HARVEST_DRAFT_PREFIX = "fishPenHarvestDraft_";
+const OFFLINE_MUTATION_QUEUE_KEY = "fishPenOfflineMutationQueue";
+
+function getHarvestDraftKey(croppingID) {
+  return HARVEST_DRAFT_PREFIX + String(croppingID || "local").trim();
+}
+
+function ensureHarvestCropping(callback) {
+  if (selectedCropping) {
+    harvestCroppingID = selectedCropping;
+    localStorage.setItem("fishPenHarvestCroppingID", harvestCroppingID);
+    if (callback) callback(true, harvestCroppingID);
+    return;
+  }
+
+  const cached = localStorage.getItem("fishPenHarvestCroppingID") || harvestCroppingID || "";
+  if (!navigator.onLine) {
+    harvestCroppingID = cached;
+    if (callback) callback(!!harvestCroppingID, harvestCroppingID);
+    return;
+  }
+
+  // Online, always resolve the latest/current cropping instead of
+  // relying on a potentially outdated saved selection.
+  google.script.run
+    .withSuccessHandler(function(id) {
+      harvestCroppingID = String(id || "").trim();
+      if (harvestCroppingID) localStorage.setItem("fishPenHarvestCroppingID", harvestCroppingID);
+      if (callback) callback(!!harvestCroppingID, harvestCroppingID);
+    })
+    .withFailureHandler(function(error) {
+      const fallback = localStorage.getItem("fishPenHarvestCroppingID") || "";
+      harvestCroppingID = fallback;
+      if (callback) callback(!!fallback, fallback, error);
+    })
+    .getCurrentCroppingID();
+}
+
+function saveHarvestDraftLocal() {
+  const id = harvestCroppingID || selectedCropping || localStorage.getItem("fishPenHarvestCroppingID") || "";
+  if (!id) return;
+  harvestCroppingID = id;
+  const buyerName = document.getElementById("buyerName");
+  const buyerCash = document.getElementById("buyerCashAdvance");
+  const buyerRemaining = document.getElementById("buyerRemaining");
+  const harvestNote = document.getElementById("harvestNote");
+  const pullFishSize = document.getElementById("pullFishSize");
+  const pullKilo = document.getElementById("pullKiloPerBox");
+  const pullBoxes = document.getElementById("pullBoxes");
+  const pullNote = document.getElementById("pullNote");
+  const draft = {
+    croppingID: id,
+    entries: harvestEntries || [],
+    pullOuts: pullOutHistory || [],
+    buyer: buyerName ? buyerName.value : "",
+    cashAdvance: buyerCash ? buyerCash.value : "",
+    buyerRemaining: buyerRemaining ? buyerRemaining.value : "",
+    note: harvestNote ? harvestNote.value : "",
+    pullForm: {
+      fishSize: pullFishSize ? pullFishSize.value : "",
+      kiloPerBox: pullKilo ? pullKilo.value : "",
+      boxes: pullBoxes ? pullBoxes.value : "",
+      note: pullNote ? pullNote.value : ""
+    },
+    savedAt: Date.now(),
+    pending: true
+  };
+  try { localStorage.setItem(getHarvestDraftKey(id), JSON.stringify(draft)); } catch (e) { console.error("Unable to save local Harvest draft", e); }
+}
+
+function restoreHarvestDraft(draft) {
+  if (!draft) return false;
+  harvestEntries = Array.isArray(draft.entries) ? draft.entries : [];
+  pullOutHistory = Array.isArray(draft.pullOuts) ? draft.pullOuts : [];
+  const setValue = function(id, value) {
+    const el = document.getElementById(id);
+    if (el && value !== undefined && value !== null) el.value = value;
+  };
+  setValue("buyerName", draft.buyer || "");
+  setValue("buyerCashAdvance", draft.cashAdvance || "");
+  setValue("buyerRemaining", draft.buyerRemaining || "");
+  setValue("harvestNote", draft.note || "");
+  if (draft.pullForm) {
+    setValue("pullFishSize", draft.pullForm.fishSize || "");
+    setValue("pullKiloPerBox", draft.pullForm.kiloPerBox || "");
+    setValue("pullBoxes", draft.pullForm.boxes || "");
+    setValue("pullNote", draft.pullForm.note || "");
+  }
+  renderHarvestEntries();
+  renderCurrentBoxTable();
+  renderPullOutHistory(pullOutHistory);
+  updateHarvestTotals();
+  updatePullOutSelects();
+  return true;
+}
+
+function scheduleHarvestServerSave() {
+  saveHarvestDraftLocal();
+  if (harvestSaveTimer) clearTimeout(harvestSaveTimer);
+  harvestSaveTimer = setTimeout(function() {
+    saveTemporaryHarvest();
+  }, 700);
+}
+
+function updateEntryDraft(index, field, value) {
+  if (!harvestEntries[index]) return;
+  if (["kiloPerBox", "pricePerKilo", "boxes", "loose"].indexOf(field) >= 0) {
+    harvestEntries[index][field] = Number(value) || 0;
+  } else {
+    harvestEntries[index][field] = value;
+  }
+  saveHarvestDraftLocal();
+  scheduleHarvestServerSave();
+}
+
+function updateOfflineStatus() {
+  const bar = document.getElementById("offlineStatus");
+  if (!bar) return;
+  bar.style.display = navigator.onLine ? "none" : "block";
+  if (navigator.onLine) flushOfflineMutationQueue();
+}
+
+function getOfflineMutationQueue() {
+  try { return JSON.parse(localStorage.getItem(OFFLINE_MUTATION_QUEUE_KEY) || "[]"); }
+  catch (e) { return []; }
+}
+
+function saveOfflineMutationQueue(queue) {
+  localStorage.setItem(OFFLINE_MUTATION_QUEUE_KEY, JSON.stringify(queue || []));
+}
+
+function enqueueOfflineMutation(action, args) {
+  const queue = getOfflineMutationQueue();
+  const item = { action: action, args: args, queuedAt: Date.now() };
+  if (action === "saveTemporaryHarvest") {
+    const id = String(args[0] || "");
+    const existing = queue.findIndex(function(q) { return q.action === action && String(q.args[0] || "") === id; });
+    if (existing >= 0) queue[existing] = item;
+    else queue.push(item);
+  } else {
+    queue.push(item);
+  }
+  saveOfflineMutationQueue(queue);
+}
+
+function flushOfflineMutationQueue() {
+  if (!navigator.onLine || window.fishPenQueueSyncing) return;
+  const queue = getOfflineMutationQueue();
+  if (!queue.length) return;
+  window.fishPenQueueSyncing = true;
+  const runNext = function() {
+    const current = getOfflineMutationQueue();
+    if (!current.length || !navigator.onLine) {
+      window.fishPenQueueSyncing = false;
+      return;
+    }
+    const item = current[0];
+    fetch(APPS_SCRIPT_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ action: item.action, args: item.args }),
+      redirect: "follow"
+    }).then(function(response) {
+      if (!response.ok) throw new Error("HTTP " + response.status);
+      return response.text();
+    }).then(function(raw) {
+      const result = JSON.parse(raw);
+      if (!result || result.success !== true) throw new Error(result && result.error ? result.error : "Sync failed");
+      if (item.action === "saveTemporaryHarvest") {
+        const key = getHarvestDraftKey(item.args[0]);
+        try {
+          const draft = JSON.parse(localStorage.getItem(key) || "{}");
+          draft.pending = false;
+          draft.syncedAt = Date.now();
+          localStorage.setItem(key, JSON.stringify(draft));
+        } catch (e) {}
+      }
+      current.shift();
+      saveOfflineMutationQueue(current);
+      runNext();
+    }).catch(function(error) {
+      console.warn("Harvest offline sync is waiting:", error);
+      window.fishPenQueueSyncing = false;
+      const bar = document.getElementById("offlineStatus");
+      if (bar) { bar.style.display = "block"; bar.textContent = "Connection interrupted: saved Harvest changes are waiting to sync."; }
+    });
+  };
+  runNext();
+}
+
+window.addEventListener("online", updateOfflineStatus);
+window.addEventListener("offline", updateOfflineStatus);
+window.addEventListener("pageshow", updateOfflineStatus);
+window.addEventListener("pagehide", saveHarvestDraftLocal);
+window.addEventListener("beforeunload", saveHarvestDraftLocal);
+
+document.addEventListener("input", function(event) {
+  const id = event.target && event.target.id;
+  if (["buyerName", "buyerCashAdvance", "harvestNote", "pullFishSize", "pullKiloPerBox", "pullBoxes", "pullNote"].indexOf(id) >= 0) {
+    scheduleHarvestServerSave();
+  }
+});
 
 
 /* ==========================================================
@@ -1743,6 +1974,8 @@ function updatePageCroppingLabels() {
 
 function globalCroppingChanged(value) {
   selectedCropping = String(value || '').trim();
+  harvestCroppingID = selectedCropping;
+  if (harvestCroppingID) localStorage.setItem("fishPenHarvestCroppingID", harvestCroppingID);
   const mainSelect = document.getElementById('globalCropping');
   const topSelect = document.getElementById('globalCroppingTop');
   if (mainSelect) mainSelect.value = selectedCropping;
@@ -1752,6 +1985,8 @@ function globalCroppingChanged(value) {
   updatePageCroppingLabels();
   try { croppingChanged(true); } catch (e) { console.error(e); }
   refreshAllPagesForCropping();
+  const harvestPage = document.getElementById("harvest");
+  if (harvestPage && harvestPage.classList.contains("active")) loadTemporaryHarvest();
 }
 
 function refreshAllPagesForCropping() {
@@ -1809,9 +2044,7 @@ function showPage(pageID, button) {
     try {
       if (pageID === "dashboard") loadDashboard();
       else if (pageID === "transactions") loadTransactionsPage();
-      else if (pageID === "harvest") {
-        if (selectedCropping) loadTemporaryHarvest();
-      }
+      else if (pageID === "harvest") loadTemporaryHarvest();
       else if (pageID === "harvestRecords") loadHarvestRecordsPage();
       else if (pageID === "expenses") { prepareExpenseForm(); loadExpenses(); }
       else if (pageID === "caretaker") { prepareCaretakerForm(); loadCaretaker(); }
@@ -1913,7 +2146,39 @@ function loadCroppings() {
       if(top){ top.innerHTML='<option value="">All Croppings</option>'; (data||[]).forEach(function(id){const o=document.createElement('option');o.value=id;o.textContent=id;top.appendChild(o);}); }
       const rec=document.getElementById("recordsCropping");
       if(rec){ rec.innerHTML='<option value="">All Croppings</option>'; (data||[]).forEach(function(id){const o=document.createElement('option');o.value=id;o.textContent=id;rec.appendChild(o);}); }
+      // Restore the previously selected cropping when it still exists.
+      // Otherwise, automatically use the newest/current cropping.
       syncCroppingSelectors();
+
+      const availableCroppings = (data || []).map(function(id) {
+        return String(id || "").trim();
+      }).filter(Boolean);
+
+      if (!availableCroppings.includes(selectedCropping)) {
+        selectedCropping = availableCroppings.length
+          ? availableCroppings[availableCroppings.length - 1]
+          : "";
+      }
+
+      // Keep all cropping selectors and the saved selection in sync.
+      const mainCroppingSelect = document.getElementById("globalCropping");
+      const topCroppingSelect = document.getElementById("globalCroppingTop");
+      const recordsCroppingSelect = document.getElementById("recordsCropping");
+
+      if (mainCroppingSelect) mainCroppingSelect.value = selectedCropping;
+      if (topCroppingSelect) topCroppingSelect.value = selectedCropping;
+      if (recordsCroppingSelect) recordsCroppingSelect.value = selectedCropping;
+
+      if (selectedCropping) {
+        localStorage.setItem("fishPenSelectedCropping", selectedCropping);
+        updatePageCroppingLabels();
+        loadCroppingInfo();
+        loadTemporaryHarvest();
+      } else {
+        localStorage.removeItem("fishPenSelectedCropping");
+        updatePageCroppingLabels();
+        loadTemporaryHarvest();
+      }
 
     })
 
@@ -2000,63 +2265,69 @@ function loadCroppingInfo() {
    TEMPORARY HARVEST
 ========================================================== */
 
-function loadTemporaryHarvest() {
+function loadTemporaryHarvest(callback) {
+  ensureHarvestCropping(function(ready, croppingID) {
+    if (!ready) {
+      const message = "No current cropping is available yet.";
+      const status = document.getElementById("harvestStatus");
+      if (status) { status.className = "status status-error"; status.textContent = message; }
+      if (callback) callback(false);
+      return;
+    }
 
-  if (!selectedCropping) return;
+    const draftKey = getHarvestDraftKey(croppingID);
+    let localDraft = null;
+    try { localDraft = JSON.parse(localStorage.getItem(draftKey) || "null"); } catch (e) {}
 
-  google.script.run
+    if (!navigator.onLine) {
+      if (localDraft) restoreHarvestDraft(localDraft);
+      const status = document.getElementById("harvestStatus");
+      if (status) { status.className = "status status-success"; status.textContent = "Offline draft loaded for " + croppingID + ". Changes will sync when online."; }
+      if (callback) callback(!!localDraft);
+      return;
+    }
 
-    .withSuccessHandler(function(data) {
+    // If a draft was edited offline, restore it and queue the latest full snapshot.
+    if (localDraft && localDraft.pending) {
+      restoreHarvestDraft(localDraft);
+      saveTemporaryHarvest(function() {
+        if (callback) callback(true);
+      });
+      return;
+    }
 
-      harvestEntries =
-        data.entries || [];
-
-      actionHistory = [];
-
-      document.getElementById("buyerName").value =
-        data.buyer || "";
-
-      document.getElementById("buyerCashAdvance").value =
-        data.cashAdvance || "";
-
-      document.getElementById("buyerRemaining").value =
-        data.buyerRemaining || "";
-
-      document.getElementById("harvestNote").value =
-        data.note || "";
-
-      renderHarvestEntries();
-
-      renderCurrentBoxTable();
-
-      renderPullOutHistory(data.pullOuts || []);
-
-      updateHarvestTotals();
-
-      updatePullOutSelects();
-
-      document.getElementById("harvestStatus").className =
-        "status status-success";
-
-      document.getElementById("harvestStatus").textContent =
-        "Active cropping: " + selectedCropping;
-
-    })
-
-    .withFailureHandler(function(error) {
-
-      console.error(error);
-
-      document.getElementById("harvestStatus").className =
-        "status status-error";
-
-      document.getElementById("harvestStatus").textContent =
-        error.message || "Unable to load harvest.";
-
-    })
-
-    .getTemporaryHarvest(selectedCropping);
-
+    google.script.run
+      .withSuccessHandler(function(data) {
+        harvestEntries = data.entries || [];
+        actionHistory = [];
+        pullOutHistory = data.pullOuts || [];
+        document.getElementById("buyerName").value = data.buyer || "";
+        document.getElementById("buyerCashAdvance").value = data.cashAdvance || "";
+        document.getElementById("buyerRemaining").value = data.buyerRemaining || "";
+        document.getElementById("harvestNote").value = data.note || "";
+        renderHarvestEntries();
+        renderCurrentBoxTable();
+        renderPullOutHistory(data.pullOuts || []);
+        updateHarvestTotals();
+        updatePullOutSelects();
+        saveHarvestDraftLocal();
+        const savedDraft = JSON.parse(localStorage.getItem(draftKey) || "{}");
+        savedDraft.pending = false;
+        savedDraft.savedAt = Date.now();
+        localStorage.setItem(draftKey, JSON.stringify(savedDraft));
+        const status = document.getElementById("harvestStatus");
+        if (status) { status.className = "status status-success"; status.textContent = "Active cropping: " + croppingID; }
+        if (callback) callback(true);
+      })
+      .withFailureHandler(function(error) {
+        if (localDraft) restoreHarvestDraft(localDraft);
+        const status = document.getElementById("harvestStatus");
+        if (status) { status.className = "status status-error"; status.textContent = "Connection unavailable. Local Harvest draft restored."; }
+        console.error(error);
+        if (callback) callback(!!localDraft);
+      })
+      .getTemporaryHarvest(croppingID);
+  });
 }
 
 
@@ -2136,11 +2407,11 @@ function renderHarvestEntries() {
     html += '<div id="'+bodyId+'" class="'+detailClass+'">';
     html += '<div class="form-grid">';
     html += '<div class="form-group"><label>Fish Size</label><select onchange="updateEntry('+index+', \'fishSize\', this.value)"><option value="">Select Fish Size</option><option value="OS" '+(String(fish).toUpperCase()==='OS'?'selected':'')+'>OS</option><option value="2-1" '+(fish==='2-1'?'selected':'')+'>2-1</option><option value="5-2" '+(fish==='5-2'?'selected':'')+'>5-2</option><option value="3-1" '+(fish==='3-1'?'selected':'')+'>3-1</option><option value="4-1" '+(fish==='4-1'?'selected':'')+'>4-1</option><option value="daing" '+(String(fish).toLowerCase()==='daing'?'selected':'')+'>Daing</option></select></div>';
-    html += '<div class="form-group"><label>Kilo per Box</label><input type="number" min="0" step="0.01" value="'+kilo+'" onchange="updateEntry('+index+', \'kiloPerBox\', this.value)"></div>';
-    html += '<div class="form-group"><label>Price per Kilo</label><input type="number" min="0" step="0.01" value="'+price+'" onchange="updateEntry('+index+', \'pricePerKilo\', this.value)"></div>';
+    html += '<div class="form-group"><label>Kilo per Box</label><input type="number" min="0" step="0.01" value="'+kilo+'" oninput="updateEntryDraft('+index+', \'kiloPerBox\', this.value)" onchange="updateEntry('+index+', \'kiloPerBox\', this.value)"></div>';
+    html += '<div class="form-group"><label>Price per Kilo</label><input type="number" min="0" step="0.01" value="'+price+'" oninput="updateEntryDraft('+index+', \'pricePerKilo\', this.value)" onchange="updateEntry('+index+', \'pricePerKilo\', this.value)"></div>';
     html += '<div class="form-group"><label>Box Count</label><div class="counter"><button onclick="changeBoxes('+index+',-1)">−</button><div class="count">'+boxes+'</div><button onclick="changeBoxes('+index+',1)">+</button><button class="btn btn-secondary btn-small harvest-entry-undo" onclick="undoEntryBox('+index+')">Undo</button></div></div>';
     html += '</div>';
-    html += '<div class="form-group" style="margin-top:10px;"><label>Loose</label><input type="number" min="0" step="0.01" value="'+loose+'" onchange="updateEntry('+index+', \'loose\', this.value)"></div>';
+    html += '<div class="form-group" style="margin-top:10px;"><label>Loose</label><input type="number" min="0" step="0.01" value="'+loose+'" oninput="updateEntryDraft('+index+', \'loose\', this.value)" onchange="updateEntry('+index+', \'loose\', this.value)"></div>';
     html += '<div style="overflow-x:auto;margin-top:12px;"><table><tr><th>Fish Size</th><th>Kilo per Box</th><th>Price per Kilo</th><th>Box Count</th><th>Loose</th></tr><tr><td>'+escapeHTML(fish)+'</td><td>'+kilo+'</td><td>'+money(price)+'</td><td>'+boxes+'</td><td>'+loose+' kg</td></tr></table></div>';
     html += '<div class="entry-grid" style="margin-top:10px;"><div class="entry-stat"><span>TOTAL BOXES</span><strong>'+boxes+'</strong></div><div class="entry-stat"><span>LOOSE</span><strong>'+loose+' kg</strong></div><div class="entry-stat"><span>TOTAL KILOS</span><strong>'+kilos.toFixed(2)+' kg</strong></div><div class="entry-stat"><span>AMOUNT</span><strong>'+money(amount)+'</strong></div></div>';
     html += '</div></div>';
@@ -2568,16 +2839,9 @@ function updateHarvestTotals() {
 ========================================================== */
 
 function saveBuyerInfo() {
-
-  if (!selectedCropping) {
-
-    alert("Please select a cropping first.");
-
-    return;
-
-  }
-
-  saveTemporaryHarvest(function() {
+  ensureHarvestCropping(function(ready) {
+    if (!ready) { alert("No current cropping is available yet."); return; }
+    saveTemporaryHarvest(function() {
 
     const status =
       document.getElementById("completeStatus");
@@ -2585,9 +2849,11 @@ function saveBuyerInfo() {
     status.className =
       "status status-success";
 
-    status.textContent =
-      "Buyer information saved.";
+    status.textContent = navigator.onLine
+      ? "Buyer information saved."
+      : "Buyer information saved on this device. It will sync when online.";
 
+    });
   });
 
 }
@@ -2598,56 +2864,37 @@ function saveBuyerInfo() {
 ========================================================== */
 
 function saveTemporaryHarvest(callback) {
+  saveHarvestDraftLocal();
+  ensureHarvestCropping(function(ready, croppingID) {
+    if (!ready) { if (callback) callback(false); return; }
+    const buyer = document.getElementById("buyerName").value.trim();
+    const cashAdvance = Number(document.getElementById("buyerCashAdvance").value) || 0;
+    const buyerRemaining = Number(document.getElementById("buyerRemaining").value) || 0;
+    const note = document.getElementById("harvestNote").value.trim();
 
-  if (!selectedCropping) {
+    if (!navigator.onLine) {
+      saveHarvestDraftLocal();
+      if (callback) callback(true);
+      return;
+    }
 
-    if (callback) callback();
-
-    return;
-
-  }
-
-  const buyer =
-    document.getElementById("buyerName").value.trim();
-
-  const cashAdvance =
-    Number(
-      document.getElementById("buyerCashAdvance").value
-    ) || 0;
-
-  const buyerRemaining =
-    Number(
-      document.getElementById("buyerRemaining").value
-    ) || 0;
-
-  const note =
-    document.getElementById("harvestNote").value.trim();
-
-  google.script.run
-
-    .withSuccessHandler(function() {
-
-      if (callback) callback();
-
-    })
-
-    .withFailureHandler(function(error) {
-
-      console.error(error);
-
-      if (callback) callback();
-
-    })
-
-    .saveTemporaryHarvest(
-      selectedCropping,
-      harvestEntries,
-      buyer,
-      cashAdvance,
-      buyerRemaining,
-      note
-    );
-
+    google.script.run
+      .withSuccessHandler(function(result) {
+        const key = getHarvestDraftKey(croppingID);
+        let draft = {};
+        try { draft = JSON.parse(localStorage.getItem(key) || "{}"); } catch (e) {}
+        draft.pending = !!(result && result.offlineQueued);
+        draft.savedAt = Date.now();
+        localStorage.setItem(key, JSON.stringify(draft));
+        if (callback) callback(true);
+      })
+      .withFailureHandler(function(error) {
+        console.error(error);
+        saveHarvestDraftLocal();
+        if (callback) callback(false);
+      })
+      .saveTemporaryHarvest(croppingID, harvestEntries, buyer, cashAdvance, buyerRemaining, note);
+  });
 }
 
 
@@ -2826,13 +3073,12 @@ function updatePullOutKilos() {
 ========================================================== */
 
 function pullOutBoxes() {
-
-  if (!selectedCropping) {
-
-    alert("Please select a cropping first.");
-
+  if (!harvestCroppingID) {
+    ensureHarvestCropping(function(ready) {
+      if (ready) { loadTemporaryHarvest(function(loaded) { if (loaded) pullOutBoxes(); }); }
+      else alert("No current cropping is available yet.");
+    });
     return;
-
   }
 
   const fishSize =
@@ -2925,18 +3171,23 @@ function pullOutBoxes() {
 
     .withSuccessHandler(function(data) {
 
+      if (data && data.offlineQueued) {
+        pullOutHistory.push({ id: data.id || ("POOFF-" + Date.now()), croppingID: harvestCroppingID, date: new Date().toLocaleString(), fishSize: fishSize, kiloPerBox: kiloPerBox, boxes: boxes, note: note });
+      }
       document.getElementById("pullBoxes").value = "";
 
       document.getElementById("pullNote").value = "";
+      saveHarvestDraftLocal();
 
-      loadTemporaryHarvest();
+      if (navigator.onLine) loadTemporaryHarvest();
+      else { renderPullOutHistory(pullOutHistory); renderCurrentBoxTable(); }
 
       document.getElementById("completeStatus").className =
         "status status-success";
 
-      document.getElementById("completeStatus").textContent =
-        boxes +
-        " box(es) pulled out successfully. Current Harvest Total was not changed.";
+      document.getElementById("completeStatus").textContent = data && data.offlineQueued
+        ? "Pull-out saved on this device. It will sync when online."
+        : boxes + " box(es) pulled out successfully. Current Harvest Total was not changed.";
 
     })
 
@@ -2950,7 +3201,7 @@ function pullOutBoxes() {
     })
 
     .addPullOutRecord(
-      selectedCropping,
+      harvestCroppingID,
       fishSize,
       kiloPerBox,
       boxes,
@@ -3047,6 +3298,10 @@ function renderPullOutHistory(data) {
 ========================================================== */
 
 function removePullOut(id) {
+  if (!harvestCroppingID) {
+    ensureHarvestCropping(function(ready) { if (ready) removePullOut(id); else alert("No current cropping is available yet."); });
+    return;
+  }
 
   if (!confirm(
     "Remove this pull-out record?\n\nThe boxes will be returned to Current Box Count."
@@ -3054,15 +3309,22 @@ function removePullOut(id) {
 
   google.script.run
 
-    .withSuccessHandler(function() {
+    .withSuccessHandler(function(result) {
 
-      loadTemporaryHarvest();
+      if (result && result.offlineQueued) {
+        pullOutHistory = pullOutHistory.filter(function(record) { return String(record.id) !== String(id); });
+        renderPullOutHistory(pullOutHistory);
+        saveHarvestDraftLocal();
+      } else {
+        loadTemporaryHarvest();
+      }
 
       document.getElementById("completeStatus").className =
         "status status-success";
 
-      document.getElementById("completeStatus").textContent =
-        "Pull-out record removed and the boxes were restored.";
+      document.getElementById("completeStatus").textContent = result && result.offlineQueued
+        ? "Pull-out removal saved on this device. It will sync when online."
+        : "Pull-out record removed and the boxes were restored.";
 
     })
 
@@ -3076,7 +3338,7 @@ function removePullOut(id) {
     })
 
     .removePullOutRecord(
-      selectedCropping,
+      harvestCroppingID,
       id
     );
 
@@ -3088,13 +3350,14 @@ function removePullOut(id) {
 ========================================================== */
 
 function completeHarvest() {
-
-  if (!selectedCropping) {
-
-    alert("Please select a cropping first.");
-
+  if (!harvestCroppingID) {
+    ensureHarvestCropping(function(ready) { if (ready) completeHarvest(); else alert("No current cropping is available yet."); });
     return;
-
+  }
+  if (!navigator.onLine) {
+    saveHarvestDraftLocal();
+    alert("Your Harvest draft is safely saved on this device. Connect to the internet to permanently complete the harvest.");
+    return;
   }
 
   if (!harvestEntries.length) {
@@ -3158,6 +3421,7 @@ function completeHarvest() {
         "Harvest completed successfully. Permanent record: " +
         result.harvestID;
 
+      try { localStorage.removeItem(getHarvestDraftKey(harvestCroppingID)); } catch (e) {}
       harvestEntries = [];
 
       pullOutHistory = [];
@@ -3193,7 +3457,7 @@ function completeHarvest() {
     })
 
     .completeHarvest(
-      selectedCropping,
+      harvestCroppingID,
       harvestEntries,
       buyer,
       cashAdvance,
@@ -3209,13 +3473,9 @@ function completeHarvest() {
 ========================================================== */
 
 function clearTemporaryHarvest() {
-
-  if (!selectedCropping) {
-
-    alert("Please select a cropping first.");
-
+  if (!harvestCroppingID) {
+    ensureHarvestCropping(function(ready) { if (ready) clearTemporaryHarvest(); else alert("No current cropping is available yet."); });
     return;
-
   }
 
   if (!confirm(
@@ -3224,8 +3484,9 @@ function clearTemporaryHarvest() {
 
   google.script.run
 
-    .withSuccessHandler(function() {
+    .withSuccessHandler(function(result) {
 
+      try { localStorage.removeItem(getHarvestDraftKey(harvestCroppingID)); } catch (e) {}
       harvestEntries = [];
       pullOutHistory = [];
       actionHistory = [];
@@ -3244,8 +3505,9 @@ function clearTemporaryHarvest() {
       document.getElementById("completeStatus").className =
         "status status-success";
 
-      document.getElementById("completeStatus").textContent =
-        "Temporary harvest cleared. Permanent Harvest Records remain safe.";
+      document.getElementById("completeStatus").textContent = result && result.offlineQueued
+        ? "Temporary Harvest cleared on this device. The clear request will sync when online."
+        : "Temporary harvest cleared. Permanent Harvest Records remain safe.";
 
     })
 
@@ -3258,7 +3520,7 @@ function clearTemporaryHarvest() {
 
     })
 
-    .clearTemporaryHarvest(selectedCropping);
+    .clearTemporaryHarvest(harvestCroppingID);
 
 }
 
@@ -4601,6 +4863,12 @@ window.onload = function() {
   try { sortTransactionDropdowns(); } catch (e) { console.error(e); }
   try { restoreSidebarState();
   updatePageCroppingLabels(); } catch (e) { console.error(e); }
+  try { updateOfflineStatus(); } catch (e) { console.error(e); }
+  try {
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("./service-worker.js").catch(function(error) { console.warn("Offline app shell registration unavailable:", error); });
+    }
+  } catch (e) { console.warn(e); }
   try { loadCroppings(); } catch (e) { console.error(e); }
   try { loadTransactionsPage(); } catch (e) { console.error(e); }
   try { prepareExpenseForm(); prepareCaretakerForm(); } catch (e) { console.error(e); }
@@ -4669,40 +4937,7 @@ window.onload = function() {
     </div>
     <div id="editTransactionMessage" class="status status-info" style="margin-top:13px;display:none;"></div>
   </div>
-</div><script>
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", function () {
-    navigator.serviceWorker.register("./sw.js", { scope: "./" })
-      .then(function (registration) {
-        console.log("Fish Pen service worker registered:", registration.scope);
-      })
-      .catch(function (error) {
-        console.error("Fish Pen service worker registration failed:", error);
-      });
-  });
-}
-</script>
-
-  <script>
-/* ==========================================================
-   FISH PEN TRACKER - PWA SERVICE WORKER REGISTRATION
-   ========================================================== */
-
-<script>
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", function () {
-    navigator.serviceWorker.register("./sw.js", { scope: "./" })
-      .then(function (registration) {
-        console.log("Fish Pen service worker registered:", registration.scope);
-      })
-      .catch(function (error) {
-        console.error("Fish Pen service worker registration failed:", error);
-      });
-  });
-}
-</script>
-
-</body>
+</div></body>
 </html>
 
 <!-- GitHub Pages update -->
