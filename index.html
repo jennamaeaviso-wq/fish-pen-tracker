@@ -1058,7 +1058,7 @@
       </div>
 
       <div id="harvestStatus" class="status status-info">
-        Select a cropping first.
+        Harvest activities can be recorded without selecting a cropping.
       </div>
 
 
@@ -1709,34 +1709,13 @@ function getHarvestDraftKey(croppingID) {
 }
 
 function ensureHarvestCropping(callback) {
-  if (selectedCropping) {
-    harvestCroppingID = selectedCropping;
-    localStorage.setItem("fishPenHarvestCroppingID", harvestCroppingID);
-    if (callback) callback(true, harvestCroppingID);
-    return;
-  }
-
-  const cached = localStorage.getItem("fishPenHarvestCroppingID") || harvestCroppingID || "";
-  if (!navigator.onLine) {
-    harvestCroppingID = cached;
-    if (callback) callback(!!harvestCroppingID, harvestCroppingID);
-    return;
-  }
-
-  // Online, always resolve the latest/current cropping instead of
-  // relying on a potentially outdated saved selection.
-  google.script.run
-    .withSuccessHandler(function(id) {
-      harvestCroppingID = String(id || "").trim();
-      if (harvestCroppingID) localStorage.setItem("fishPenHarvestCroppingID", harvestCroppingID);
-      if (callback) callback(!!harvestCroppingID, harvestCroppingID);
-    })
-    .withFailureHandler(function(error) {
-      const fallback = localStorage.getItem("fishPenHarvestCroppingID") || "";
-      harvestCroppingID = fallback;
-      if (callback) callback(!!fallback, fallback, error);
-    })
-    .getCurrentCroppingID();
+  // Cropping selection is optional for Harvest. When a cropping is
+  // selected, keep the existing per-cropping behavior. Otherwise use
+  // a separate Unassigned Harvest bucket instead of blocking the user.
+  const id = String(selectedCropping || "UNASSIGNED").trim();
+  harvestCroppingID = id;
+  localStorage.setItem("fishPenHarvestCroppingID", id);
+  if (callback) callback(true, id);
 }
 
 function saveHarvestDraftLocal() {
@@ -2268,7 +2247,7 @@ function loadCroppingInfo() {
 function loadTemporaryHarvest(callback) {
   ensureHarvestCropping(function(ready, croppingID) {
     if (!ready) {
-      const message = "No current cropping is available yet.";
+      const message = "Harvest activities can be recorded without selecting a cropping.";
       const status = document.getElementById("harvestStatus");
       if (status) { status.className = "status status-error"; status.textContent = message; }
       if (callback) callback(false);
@@ -2282,7 +2261,7 @@ function loadTemporaryHarvest(callback) {
     if (!navigator.onLine) {
       if (localDraft) restoreHarvestDraft(localDraft);
       const status = document.getElementById("harvestStatus");
-      if (status) { status.className = "status status-success"; status.textContent = "Offline draft loaded for " + croppingID + ". Changes will sync when online."; }
+      if (status) { status.className = "status status-success"; status.textContent = croppingID === "UNASSIGNED" ? "Unassigned Harvest loaded offline. Changes will sync when online." : "Offline draft loaded for " + croppingID + ". Changes will sync when online."; }
       if (callback) callback(!!localDraft);
       return;
     }
@@ -2316,7 +2295,7 @@ function loadTemporaryHarvest(callback) {
         savedDraft.savedAt = Date.now();
         localStorage.setItem(draftKey, JSON.stringify(savedDraft));
         const status = document.getElementById("harvestStatus");
-        if (status) { status.className = "status status-success"; status.textContent = "Active cropping: " + croppingID; }
+        if (status) { status.className = "status status-success"; status.textContent = croppingID === "UNASSIGNED" ? "Harvest is ready. No cropping selection is required." : "Active cropping: " + croppingID; }
         if (callback) callback(true);
       })
       .withFailureHandler(function(error) {
@@ -2840,7 +2819,7 @@ function updateHarvestTotals() {
 
 function saveBuyerInfo() {
   ensureHarvestCropping(function(ready) {
-    if (!ready) { alert("No current cropping is available yet."); return; }
+    if (!ready) { alert("Harvest is not ready. Please try again."); return; }
     saveTemporaryHarvest(function() {
 
     const status =
@@ -3076,7 +3055,7 @@ function pullOutBoxes() {
   if (!harvestCroppingID) {
     ensureHarvestCropping(function(ready) {
       if (ready) { loadTemporaryHarvest(function(loaded) { if (loaded) pullOutBoxes(); }); }
-      else alert("No current cropping is available yet.");
+      else alert("Harvest is not ready. Please try again.");
     });
     return;
   }
@@ -3299,7 +3278,7 @@ function renderPullOutHistory(data) {
 
 function removePullOut(id) {
   if (!harvestCroppingID) {
-    ensureHarvestCropping(function(ready) { if (ready) removePullOut(id); else alert("No current cropping is available yet."); });
+    ensureHarvestCropping(function(ready) { if (ready) removePullOut(id); else alert("Harvest is not ready. Please try again."); });
     return;
   }
 
@@ -3351,7 +3330,7 @@ function removePullOut(id) {
 
 function completeHarvest() {
   if (!harvestCroppingID) {
-    ensureHarvestCropping(function(ready) { if (ready) completeHarvest(); else alert("No current cropping is available yet."); });
+    ensureHarvestCropping(function(ready) { if (ready) completeHarvest(); else alert("Harvest is not ready. Please try again."); });
     return;
   }
   if (!navigator.onLine) {
@@ -3474,7 +3453,7 @@ function completeHarvest() {
 
 function clearTemporaryHarvest() {
   if (!harvestCroppingID) {
-    ensureHarvestCropping(function(ready) { if (ready) clearTemporaryHarvest(); else alert("No current cropping is available yet."); });
+    ensureHarvestCropping(function(ready) { if (ready) clearTemporaryHarvest(); else alert("Harvest is not ready. Please try again."); });
     return;
   }
 
