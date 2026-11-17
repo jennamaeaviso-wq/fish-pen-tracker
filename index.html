@@ -1052,9 +1052,10 @@
 
     <section id="harvest" class="page">
 
-      <div class="page-header">
+      <div class="page-header" style="position:relative;">
         <h2>⚖️ Harvest</h2>
         <p>Temporary harvest weighing and delivery checking area</p>
+        <button type="button" class="btn btn-secondary btn-small" style="position:absolute;right:0;top:0;" onclick="openOutsiderModal()">🐟 Outsider</button>
       </div>
 
       <div id="harvestStatus" class="status status-info">
@@ -1230,6 +1231,7 @@
         </div>
 
       </div>
+
 
 
       <!-- PULL OUT -->
@@ -1690,6 +1692,7 @@ let selectedCropping = "";
 let harvestCroppingID = localStorage.getItem("fishPenHarvestCroppingID") || "";
 let harvestSaveTimer = null;
 let harvestEntries = [];
+let outsiderEntries = [];
 let actionHistory = [];
 let pullOutHistory = [];
 let currentReportType = "cropping";
@@ -1733,6 +1736,7 @@ function saveHarvestDraftLocal() {
   const draft = {
     croppingID: id,
     entries: harvestEntries || [],
+    outsiderEntries: outsiderEntries || [],
     pullOuts: pullOutHistory || [],
     buyer: buyerName ? buyerName.value : "",
     cashAdvance: buyerCash ? buyerCash.value : "",
@@ -1753,6 +1757,7 @@ function saveHarvestDraftLocal() {
 function restoreHarvestDraft(draft) {
   if (!draft) return false;
   harvestEntries = Array.isArray(draft.entries) ? draft.entries : [];
+  outsiderEntries = Array.isArray(draft.outsiderEntries) ? draft.outsiderEntries : [];
   pullOutHistory = Array.isArray(draft.pullOuts) ? draft.pullOuts : [];
   const setValue = function(id, value) {
     const el = document.getElementById(id);
@@ -1769,6 +1774,7 @@ function restoreHarvestDraft(draft) {
     setValue("pullNote", draft.pullForm.note || "");
   }
   renderHarvestEntries();
+  renderOutsiderEntries();
   renderCurrentBoxTable();
   renderPullOutHistory(pullOutHistory);
   updateHarvestTotals();
@@ -2278,6 +2284,7 @@ function loadTemporaryHarvest(callback) {
     google.script.run
       .withSuccessHandler(function(data) {
         harvestEntries = data.entries || [];
+        outsiderEntries = data.outsiderEntries || [];
         actionHistory = [];
         pullOutHistory = data.pullOuts || [];
         document.getElementById("buyerName").value = data.buyer || "";
@@ -2285,6 +2292,7 @@ function loadTemporaryHarvest(callback) {
         document.getElementById("buyerRemaining").value = data.buyerRemaining || "";
         document.getElementById("harvestNote").value = data.note || "";
         renderHarvestEntries();
+        renderOutsiderEntries();
         renderCurrentBoxTable();
         renderPullOutHistory(data.pullOuts || []);
         updateHarvestTotals();
@@ -2872,8 +2880,77 @@ function saveTemporaryHarvest(callback) {
         saveHarvestDraftLocal();
         if (callback) callback(false);
       })
-      .saveTemporaryHarvest(croppingID, harvestEntries, buyer, cashAdvance, buyerRemaining, note);
+      .saveTemporaryHarvest(croppingID, harvestEntries, buyer, cashAdvance, buyerRemaining, note, outsiderEntries);
   });
+}
+
+
+/* ==========================================================
+   OUTSIDER / FISH SHARING (SEPARATE FROM BUYER)
+========================================================== */
+function openOutsiderModal() {
+  renderOutsiderEntries();
+  const modal = document.getElementById("outsiderModal");
+  if (modal) modal.classList.remove("hidden");
+}
+
+function closeOutsiderModal(event) {
+  const modal = document.getElementById("outsiderModal");
+  if (!modal) return;
+  if (event && event.target !== modal) return;
+  modal.classList.add("hidden");
+  if (typeof saveHarvestDraftLocally === "function") saveHarvestDraftLocally();
+}
+
+function addOutsiderEntry() {
+  outsiderEntries.push({ fishSize: "", pricePerKilo: 0, kilos: 0 });
+  renderOutsiderEntries();
+  saveHarvestDraftLocal();
+  saveTemporaryHarvest();
+}
+function updateOutsiderEntry(index, field, value) {
+  if (!outsiderEntries[index]) return;
+  outsiderEntries[index][field] = field === "fishSize" ? value : (Number(value) || 0);
+  renderOutsiderEntries();
+  saveHarvestDraftLocal();
+  scheduleHarvestServerSave();
+}
+function removeOutsiderEntry(index) {
+  outsiderEntries.splice(index, 1);
+  renderOutsiderEntries();
+  saveHarvestDraftLocal();
+  saveTemporaryHarvest();
+}
+function renderOutsiderEntries() {
+  const box = document.getElementById("outsiderEntries");
+  if (!box) return;
+  if (!outsiderEntries.length) {
+    box.innerHTML = '<div class="empty">No outsider fish entries yet.</div>';
+    updateOutsiderTotals();
+    return;
+  }
+  box.innerHTML = outsiderEntries.map(function(item, index) {
+    const size = escapeHTML(item.fishSize || "");
+    const price = Number(item.pricePerKilo) || 0;
+    const kilos = Number(item.kilos) || 0;
+    const amount = price * kilos;
+    return '<div class="harvest-size-entry" style="padding:12px;margin-bottom:10px;">' +
+      '<div class="form-grid">' +
+      '<div class="form-group"><label>Fish Size</label><input type="text" value="'+size+'" placeholder="e.g. 2-1" onchange="updateOutsiderEntry('+index+', &quot;fishSize&quot;, this.value)"></div>' +
+      '<div class="form-group"><label>Price per Kilo (₱)</label><input type="number" min="0" step="0.01" value="'+price+'" onchange="updateOutsiderEntry('+index+', &quot;pricePerKilo&quot;, this.value)"></div>' +
+      '<div class="form-group"><label>Kilo</label><input type="number" min="0" step="0.01" value="'+kilos+'" onchange="updateOutsiderEntry('+index+', &quot;kilos&quot;, this.value)"></div>' +
+      '</div><div class="entry-grid" style="margin-top:8px;"><div class="entry-stat"><span>ENTRY AMOUNT</span><strong>'+money(amount)+'</strong></div></div>' +
+      '<button class="btn btn-danger btn-small" style="margin-top:8px;" onclick="removeOutsiderEntry('+index+')">Remove</button></div>';
+  }).join("");
+  updateOutsiderTotals();
+}
+function updateOutsiderTotals() {
+  const kilos = outsiderEntries.reduce((sum, item) => sum + (Number(item.kilos) || 0), 0);
+  const amount = outsiderEntries.reduce((sum, item) => sum + ((Number(item.kilos) || 0) * (Number(item.pricePerKilo) || 0)), 0);
+  const kiloEl = document.getElementById("outsiderTotalKilos");
+  const amountEl = document.getElementById("outsiderTotalAmount");
+  if (kiloEl) kiloEl.textContent = kilos.toFixed(2) + " kg";
+  if (amountEl) amountEl.textContent = money(amount);
 }
 
 
@@ -3402,6 +3479,8 @@ function completeHarvest() {
 
       try { localStorage.removeItem(getHarvestDraftKey(harvestCroppingID)); } catch (e) {}
       harvestEntries = [];
+      outsiderEntries = [];
+      renderOutsiderEntries();
 
       pullOutHistory = [];
 
@@ -3413,6 +3492,7 @@ function completeHarvest() {
       document.getElementById("harvestNote").value = "";
 
       renderHarvestEntries();
+      renderOutsiderEntries();
       renderCurrentBoxTable();
       renderPullOutHistory([]);
 
@@ -3441,7 +3521,8 @@ function completeHarvest() {
       buyer,
       cashAdvance,
       buyerRemaining,
-      note
+      note,
+      outsiderEntries
     );
 
 }
@@ -3467,6 +3548,7 @@ function clearTemporaryHarvest() {
 
       try { localStorage.removeItem(getHarvestDraftKey(harvestCroppingID)); } catch (e) {}
       harvestEntries = [];
+      outsiderEntries = [];
       pullOutHistory = [];
       actionHistory = [];
 
@@ -3476,6 +3558,7 @@ function clearTemporaryHarvest() {
       document.getElementById("harvestNote").value = "";
 
       renderHarvestEntries();
+      renderOutsiderEntries();
       renderCurrentBoxTable();
       renderPullOutHistory([]);
 
@@ -4861,6 +4944,24 @@ window.onload = function() {
 
 </script>
 
+
+<div id="outsiderModal" class="transaction-add-modal hidden" onclick="closeOutsiderModal(event)">
+  <div class="transaction-add-paper" style="width:min(720px,96vw);" onclick="event.stopPropagation()">
+    <div class="transaction-add-header">
+      <h3>🐟 Outsider</h3>
+      <button type="button" class="btn btn-secondary btn-small" onclick="closeOutsiderModal()">Close</button>
+    </div>
+    <div class="pullout-note">Separate record for outsider fish. These entries and totals are not included in Buyer totals.</div>
+    <div id="outsiderEntries"></div>
+    <div class="button-row">
+      <button class="btn btn-primary" onclick="addOutsiderEntry()">+ Add Outsider Fish</button>
+    </div>
+    <div class="cards" style="margin-top:14px;">
+      <div class="card"><div class="label">Outsider Total Kilos</div><div class="value" id="outsiderTotalKilos">0.00 kg</div></div>
+      <div class="card"><div class="label">Outsider Total Amount</div><div class="value" id="outsiderTotalAmount">₱0.00</div></div>
+    </div>
+  </div>
+</div>
 
 <div id="transactionAddModal" class="transaction-add-modal hidden" onclick="closeAddTransactionModal(event)">
   <div class="transaction-add-paper" onclick="event.stopPropagation()">
