@@ -1132,10 +1132,13 @@
 
       <div class="section">
 
-        <div class="section-title">
+        <div class="section-title collapse-head"
+          onclick="toggleCollapse('harvestTotalBody', this)">
           <h3>📊 Current Harvest Total</h3>
+          <span class="collapse-arrow">▼</span>
         </div>
 
+        <div id="harvestTotalBody" class="collapse-body">
         <div class="cards">
 
           <div class="card">
@@ -1180,6 +1183,7 @@
           These are the original/current harvest totals. Only the
           <b>Current Box Count</b> changes when boxes are pulled out.
         </div>
+        </div>
 
       </div>
 
@@ -1188,10 +1192,13 @@
 
       <div class="section">
 
-        <div class="section-title">
+        <div class="section-title collapse-head"
+          onclick="toggleCollapse('harvestBuyerBody', this)">
           <h3>👤 Harvest Buyer Information</h3>
+          <span class="collapse-arrow">▼</span>
         </div>
 
+        <div id="harvestBuyerBody" class="collapse-body">
         <div class="form-grid">
 
           <div class="form-group">
@@ -1229,6 +1236,7 @@
           </button>
 
         </div>
+        </div>
 
       </div>
 
@@ -1238,10 +1246,13 @@
 
       <div class="section">
 
-        <div class="section-title">
+        <div class="section-title collapse-head"
+          onclick="toggleCollapse('pullOutDeliveryBody', this)">
           <h3>🚚 Pull Out / Delivery Checking</h3>
+          <span class="collapse-arrow">▼</span>
         </div>
 
+        <div id="pullOutDeliveryBody" class="collapse-body">
         <div class="pullout-box">
 
           <div class="pullout-note">
@@ -1296,6 +1307,7 @@
         <div style="margin-top:20px;">
           <h4 style="margin:0 0 10px;">📋 Pull Out History</h4>
           <div id="pullOutHistory"></div>
+        </div>
         </div>
 
       </div>
