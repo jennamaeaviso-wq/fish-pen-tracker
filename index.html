@@ -840,6 +840,12 @@
     .transaction-add-header h3 { margin:0; font-size:20px; }
     .transaction-add-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:18px; }
     .transactions-add-toolbar { display:flex; justify-content:flex-end; margin-bottom:15px; }
+    .swipe-delete-card,.swipe-delete-row{touch-action:pan-y}
+    .swipe-delete-card{margin:8px 0}
+    .swipe-hint{color:var(--muted);font-size:10px;margin:0 0 8px}
+    .summary-scroll{overflow-x:auto}
+    #harvestSummaryContent table{min-width:1050px}
+    @media(max-width:650px){#harvestSummaryModal{padding:8px}#harvestSummaryModal .report-paper{padding:14px;width:98vw!important}.kilo-group>.harvest-size-summary{grid-template-columns:1fr 1fr}}
 </style>
 </head>
 
@@ -1055,7 +1061,10 @@
       <div class="page-header" style="position:relative;">
         <h2>⚖️ Harvest</h2>
         <p>Temporary harvest weighing and delivery checking area</p>
-        <button type="button" class="btn btn-secondary btn-small" style="position:absolute;right:0;top:0;" onclick="openOutsiderModal()">🐟 Outsider</button>
+        <div style="position:absolute;right:0;top:0;display:flex;gap:6px;">
+          <button type="button" class="btn btn-secondary btn-small" onclick="openHarvestSummary()">Summary</button>
+          <button type="button" class="btn btn-secondary btn-small" onclick="openOutsiderModal()">Outsider</button>
+        </div>
       </div>
 
       <div id="harvestStatus" class="status status-info">
@@ -1222,12 +1231,6 @@
 
         </div>
 
-        <div class="form-group" style="margin-top:13px;">
-          <label>Harvest Note</label>
-          <textarea id="harvestNote"
-            placeholder="Optional harvest note"></textarea>
-        </div>
-
         <div class="button-row">
 
           <button class="btn btn-primary"
@@ -1285,11 +1288,7 @@
                 min="1" step="1" placeholder="0">
             </div>
 
-            <div class="form-group">
-              <label>Note</label>
-              <input id="pullNote" type="text"
-                placeholder="e.g. Delivery 1">
-            </div>
+<div class="form-group"><label>Dispatched</label><select id="pullNote"><option value="">Select number</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option></select></div>
 
           </div>
 
@@ -1305,7 +1304,7 @@
         </div>
 
         <div style="margin-top:20px;">
-          <h4 style="margin:0 0 10px;">📋 Pull Out History</h4>
+          <h4 style="margin:0 0 10px;">Dispatched Record</h4>
           <div id="pullOutHistory"></div>
         </div>
         </div>
@@ -2302,7 +2301,7 @@ function loadTemporaryHarvest(callback) {
         document.getElementById("buyerName").value = data.buyer || "";
         document.getElementById("buyerCashAdvance").value = data.cashAdvance || "";
         document.getElementById("buyerRemaining").value = data.buyerRemaining || "";
-        document.getElementById("harvestNote").value = data.note || "";
+        
         renderHarvestEntries();
         renderOutsiderEntries();
         renderCurrentBoxTable();
@@ -2382,40 +2381,43 @@ function renderHarvestEntries() {
     container.innerHTML = '<div class="empty">No weighing entries yet. Click "+ Add Fish / Kilo per Box".</div>';
     return;
   }
-  let html = '';
-  harvestEntries.forEach(function(entry, index) {
-    const fish = entry.fishSize || 'New Fish Entry';
-    const kilo = Number(entry.kiloPerBox) || 0;
-    const price = Number(entry.pricePerKilo) || 0;
-    const boxes = Number(entry.boxes) || 0;
-    const loose = Number(entry.loose) || 0;
-    const kilos = boxes * kilo + loose;
-    const amount = kilos * price;
-    const bodyId = 'harvestSizeDetail_' + index;
-    if (!Object.prototype.hasOwnProperty.call(harvestOpenSizeEntries, entry.id)) {
-      harvestOpenSizeEntries[entry.id] = true;
-    }
-    const detailClass = harvestOpenSizeEntries[entry.id] ? 'harvest-size-detail' : 'harvest-size-detail hidden';
-    html += '<div class="harvest-size-entry">';
-    html += '<div class="harvest-size-summary" onclick="toggleHarvestSize(\''+bodyId+'\')">';
-    html += '<strong>'+escapeHTML(fish)+'</strong>';
-    html += '<span class="harvest-kilo-summary"><b>'+kilo+'</b></span>';
-    html += '<div class="counter" onclick="event.stopPropagation()"><button onclick="changeBoxes('+index+',-1)">−</button><div class="count">'+boxes+'</div><button onclick="changeBoxes('+index+',1)">+</button></div>';
-    html += '<button class="btn btn-danger btn-small" onclick="event.stopPropagation();removeEntry('+index+')">Remove</button>';
-    html += '</div>';
-    html += '<div id="'+bodyId+'" class="'+detailClass+'">';
-    html += '<div class="form-grid">';
-    html += '<div class="form-group"><label>Fish Size</label><select onchange="updateEntry('+index+', \'fishSize\', this.value)"><option value="">Select Fish Size</option><option value="OS" '+(String(fish).toUpperCase()==='OS'?'selected':'')+'>OS</option><option value="2-1" '+(fish==='2-1'?'selected':'')+'>2-1</option><option value="5-2" '+(fish==='5-2'?'selected':'')+'>5-2</option><option value="3-1" '+(fish==='3-1'?'selected':'')+'>3-1</option><option value="4-1" '+(fish==='4-1'?'selected':'')+'>4-1</option><option value="daing" '+(String(fish).toLowerCase()==='daing'?'selected':'')+'>Daing</option></select></div>';
-    html += '<div class="form-group"><label>Kilo per Box</label><input type="number" min="0" step="0.01" value="'+kilo+'" oninput="updateEntryDraft('+index+', \'kiloPerBox\', this.value)" onchange="updateEntry('+index+', \'kiloPerBox\', this.value)"></div>';
-    html += '<div class="form-group"><label>Price per Kilo</label><input type="number" min="0" step="0.01" value="'+price+'" oninput="updateEntryDraft('+index+', \'pricePerKilo\', this.value)" onchange="updateEntry('+index+', \'pricePerKilo\', this.value)"></div>';
-    html += '<div class="form-group"><label>Box Count</label><div class="counter"><button onclick="changeBoxes('+index+',-1)">−</button><div class="count">'+boxes+'</div><button onclick="changeBoxes('+index+',1)">+</button><button class="btn btn-secondary btn-small harvest-entry-undo" onclick="undoEntryBox('+index+')">Undo</button></div></div>';
-    html += '</div>';
-    html += '<div class="form-group" style="margin-top:10px;"><label>Loose</label><input type="number" min="0" step="0.01" value="'+loose+'" oninput="updateEntryDraft('+index+', \'loose\', this.value)" onchange="updateEntry('+index+', \'loose\', this.value)"></div>';
-    html += '<div style="overflow-x:auto;margin-top:12px;"><table><tr><th>Fish Size</th><th>Kilo per Box</th><th>Price per Kilo</th><th>Box Count</th><th>Loose</th></tr><tr><td>'+escapeHTML(fish)+'</td><td>'+kilo+'</td><td>'+money(price)+'</td><td>'+boxes+'</td><td>'+loose+' kg</td></tr></table></div>';
-    html += '<div class="entry-grid" style="margin-top:10px;"><div class="entry-stat"><span>TOTAL BOXES</span><strong>'+boxes+'</strong></div><div class="entry-stat"><span>LOOSE</span><strong>'+loose+' kg</strong></div><div class="entry-stat"><span>TOTAL KILOS</span><strong>'+kilos.toFixed(2)+' kg</strong></div><div class="entry-stat"><span>AMOUNT</span><strong>'+money(amount)+'</strong></div></div>';
-    html += '</div></div>';
+  const groups = {};
+  harvestEntries.forEach(function(entry,index) {
+    const key=String(Number(entry.kiloPerBox)||0);
+    if(!groups[key]) groups[key]=[];
+    groups[key].push({entry:entry,index:index});
   });
-  container.innerHTML = html;
+  let html='';
+  Object.keys(groups).sort(function(a,b){return Number(a)-Number(b);}).forEach(function(key,g) {
+    const groupId='harvestKiloGroup_'+g, items=groups[key];
+    const totalBoxes=items.reduce(function(s,x){return s+(Number(x.entry.boxes)||0);},0);
+    const open=harvestOpenSizeEntries['kilo:'+key]===true;
+    html+='<div class="harvest-size-entry kilo-group"><div class="harvest-size-summary" onclick="toggleHarvestKiloGroup(\''+groupId+'\',\''+key+'\')"><strong>All Fish Sizes</strong><span class="harvest-kilo-summary">'+escapeHTML(key)+' kg / box</span><span><b>'+totalBoxes+'</b> boxes · '+items.length+' entries</span></div>';
+    html+='<div id="'+groupId+'" class="harvest-size-detail '+(open?'':'hidden')+'">';
+    items.forEach(function(item) {
+      const entry=item.entry,index=item.index,fish=entry.fishSize||'New Fish Entry';
+      const kilo=Number(entry.kiloPerBox)||0,price=Number(entry.pricePerKilo)||0,boxes=Number(entry.boxes)||0,loose=Number(entry.loose)||0;
+      const kilos=boxes*kilo+loose,amount=kilos*price,bodyId='harvestSizeDetail_'+index;
+      if(!Object.prototype.hasOwnProperty.call(harvestOpenSizeEntries,entry.id)) harvestOpenSizeEntries[entry.id]=true;
+      const detailClass=harvestOpenSizeEntries[entry.id]?'harvest-size-detail':'harvest-size-detail hidden';
+      html+='<div class="harvest-size-entry swipe-delete-card" ontouchstart="swipeStart(event)" ontouchend="swipeEnd(event, \'harvest\', '+index+')" onpointerdown="swipePointerStart(event)" onpointerup="swipePointerEnd(event, \'harvest\', '+index+')">';
+      html+='<div class="harvest-size-summary" onclick="toggleHarvestSize(\''+bodyId+'\')"><strong>'+escapeHTML(fish)+'</strong><span>'+boxes+' boxes</span><span>'+money(amount)+'</span></div>';
+      html+='<div id="'+bodyId+'" class="'+detailClass+'"><div class="form-grid">';
+      html+='<div class="form-group"><label>Fish Size</label><select onchange="updateEntry('+index+', \'fishSize\', this.value)"><option value="">Select Fish Size</option><option value="OS" '+(String(fish).toUpperCase()==='OS'?'selected':'')+'>OS</option><option value="2-1" '+(fish==='2-1'?'selected':'')+'>2-1</option><option value="5-2" '+(fish==='5-2'?'selected':'')+'>5-2</option><option value="3-1" '+(fish==='3-1'?'selected':'')+'>3-1</option><option value="4-1" '+(fish==='4-1'?'selected':'')+'>4-1</option><option value="daing" '+(String(fish).toLowerCase()==='daing'?'selected':'')+'>Daing</option></select></div>';
+      html+='<div class="form-group"><label>Kilo per Box</label><input type="number" min="0" step="0.01" value="'+kilo+'" oninput="updateEntryDraft('+index+', \'kiloPerBox\', this.value)" onchange="updateEntry('+index+', \'kiloPerBox\', this.value)"></div>';
+      html+='<div class="form-group"><label>Price per Kilo</label><input type="number" min="0" step="0.01" value="'+price+'" oninput="updateEntryDraft('+index+', \'pricePerKilo\', this.value)" onchange="updateEntry('+index+', \'pricePerKilo\', this.value)"></div>';
+      html+='<div class="form-group"><label>Box Count</label><div class="counter"><button onclick="changeBoxes('+index+',-1)">−</button><div class="count">'+boxes+'</div><button onclick="changeBoxes('+index+',1)">+</button><button class="btn btn-secondary btn-small harvest-entry-undo" onclick="undoEntryBox('+index+')">Undo</button></div></div></div>';
+      html+='<div class="form-group" style="margin-top:10px;"><label>Loose</label><input type="number" min="0" step="0.01" value="'+loose+'" oninput="updateEntryDraft('+index+', \'loose\', this.value)" onchange="updateEntry('+index+', \'loose\', this.value)"></div>';
+      html+='<div class="entry-grid" style="margin-top:10px;"><div class="entry-stat"><span>TOTAL BOXES</span><strong>'+boxes+'</strong></div><div class="entry-stat"><span>LOOSE</span><strong>'+loose+' kg</strong></div><div class="entry-stat"><span>TOTAL KILOS</span><strong>'+kilos.toFixed(2)+' kg</strong></div><div class="entry-stat"><span>AMOUNT</span><strong>'+money(amount)+'</strong></div></div></div></div>';
+    });
+    html+='</div></div>';
+  });
+  container.innerHTML=html;
+}
+function toggleHarvestKiloGroup(id,kilo) {
+  harvestOpenSizeEntries['kilo:'+kilo]=!harvestOpenSizeEntries['kilo:'+kilo];
+  const body=document.getElementById(id);
+  if(body) body.classList.toggle('hidden',!harvestOpenSizeEntries['kilo:'+kilo]);
 }
 
 function toggleHarvestSize(id) {
@@ -2869,7 +2871,7 @@ function saveTemporaryHarvest(callback) {
     const buyer = document.getElementById("buyerName").value.trim();
     const cashAdvance = Number(document.getElementById("buyerCashAdvance").value) || 0;
     const buyerRemaining = Number(document.getElementById("buyerRemaining").value) || 0;
-    const note = document.getElementById("harvestNote").value.trim();
+    const note = "";
 
     if (!navigator.onLine) {
       saveHarvestDraftLocal();
@@ -3165,6 +3167,11 @@ function pullOutBoxes() {
   const note =
     document.getElementById("pullNote").value.trim();
 
+  if (!note) {
+    alert("Please select the dispatched number.");
+    return;
+  }
+
   if (!fishSize) {
 
     alert("Please select the fish size.");
@@ -3283,83 +3290,56 @@ function pullOutBoxes() {
    RENDER PULL OUT HISTORY
 ========================================================== */
 
-function renderPullOutHistory(data) {
-
-  pullOutHistory =
-    data || [];
-
-  const container =
-    document.getElementById("pullOutHistory");
-
-  if (!pullOutHistory.length) {
-
-    container.innerHTML =
-      '<div class="empty">No pull-out records yet.</div>';
-
-    renderCurrentBoxTable();
-
-    return;
-
-  }
-
-  let html = `
-
-    <table>
-
-      <tr>
-        <th>Pull Out ID</th>
-        <th>Date</th>
-        <th>Fish Size</th>
-        <th>Kilo / Box</th>
-        <th>Boxes Out</th>
-        <th>Note</th>
-        <th>Action</th>
-      </tr>
-
-  `;
-
-  pullOutHistory.forEach(function(record) {
-
-    html += `
-
-      <tr>
-
-        <td>${escapeHTML(record.id)}</td>
-
-        <td>${escapeHTML(record.date)}</td>
-
-        <td>${escapeHTML(record.fishSize)}</td>
-
-        <td>${Number(record.kiloPerBox).toFixed(2)} kg</td>
-
-        <td>${Number(record.boxes)}</td>
-
-        <td>${escapeHTML(record.note)}</td>
-
-        <td>
-
-          <button
-            class="btn btn-danger btn-small"
-            onclick="removePullOut('${escapeHTML(record.id)}')">
-            Remove
-          </button>
-
-        </td>
-
-      </tr>
-
-    `;
-
-  });
-
-  html += "</table>";
-
-  container.innerHTML = html;
-
-  renderCurrentBoxTable();
-
+let harvestSwipeX=0;
+function swipeStart(event){const t=event.touches&&event.touches[0];if(t)harvestSwipeX=t.clientX;}
+function swipeEnd(event,kind,value){const t=event.changedTouches&&event.changedTouches[0];if(!t)return;if(Math.abs(t.clientX-harvestSwipeX)>75){if(kind==='harvest')removeEntry(Number(value));else if(kind==='pull')removePullOut(String(value));}}
+function swipePointerStart(event){if(event.pointerType==='touch'||event.pointerType==='pen')harvestSwipeX=event.clientX;}
+function swipePointerEnd(event,kind,value){if(event.pointerType!=='touch'&&event.pointerType!=='pen')return;if(Math.abs(event.clientX-harvestSwipeX)>75){if(kind==='harvest')removeEntry(Number(value));else if(kind==='pull')removePullOut(String(value));}}
+function saveDispatched(id,value){
+  const count=Number(value);if(count<1||count>10)return;
+  const record=pullOutHistory.find(function(r){return String(r.id)===String(id);});if(record)record.note=String(count);
+  saveHarvestDraftLocal();if(!navigator.onLine)return;
+  google.script.run.withFailureHandler(function(err){alert('Unable to save dispatched count: '+err.message);}).updatePullOutDispatched(harvestCroppingID,id,count);
 }
+function openHarvestSummary(){
+  const rows=harvestEntries.map(function(e){const boxes=Number(e.boxes)||0,kilo=Number(e.kiloPerBox)||0,price=Number(e.pricePerKilo)||0,kilos=boxes*kilo+(Number(e.loose)||0);return {size:e.fishSize||'-',boxes:boxes,kilo:kilo,price:price,sales:kilos*price};});
+  const advance=Number(document.getElementById('buyerCashAdvance').value)||0;
+  const totalSales=rows.reduce(function(s,r){return s+r.sales;},0),net=totalSales*.95,remaining=Math.max(0,net-advance);
+  const body=document.getElementById('harvestSummaryContent');
+  body.innerHTML='<div class="summary-scroll"><table><thead><tr><th>Fish Size</th><th>Boxes</th><th>Kilo per Box</th><th>Price</th><th>Sales</th><th>5% Net Income</th><th>Buyer Advance</th><th>Buyer Remaining Balance</th></tr></thead><tbody>'+
+    rows.map(function(r){return '<tr><td>'+escapeHTML(r.size)+'</td><td>'+r.boxes+'</td><td>'+r.kilo+'</td><td>'+money(r.price)+'</td><td>'+money(r.sales)+'</td><td>'+money(r.sales*.95)+'</td><td>'+money(advance)+'</td><td>'+money(Math.max(0,r.sales*.95-advance))+'</td></tr>';}).join('')+
+    '<tr class="total-row"><td>TOTAL</td><td>'+rows.reduce(function(s,r){return s+r.boxes;},0)+'</td><td>—</td><td>—</td><td>'+money(totalSales)+'</td><td>'+money(net)+'</td><td>'+money(advance)+'</td><td>'+money(remaining)+'</td></tr></tbody></table></div>' +
+    '<h4 style="margin:18px 0 8px;">Dispatched Record</h4>' +
+    (pullOutHistory.length ? '<div class="summary-scroll"><table><tr><th>Pull Out ID</th><th>Date</th><th>Fish Size</th><th>Kilo per Box</th><th>Boxes Out</th><th>Dispatched</th></tr>' +
+      pullOutHistory.map(function(p){return '<tr><td>'+escapeHTML(p.id)+'</td><td>'+escapeHTML(formatPullOutDate(p.date))+'</td><td>'+escapeHTML(p.fishSize)+'</td><td>'+Number(p.kiloPerBox||0).toFixed(2)+'</td><td>'+Number(p.boxes||0)+'</td><td>'+escapeHTML(p.note||'1')+'</td></tr>';}).join('') + '</table></div>' :
+      '<div class="empty">No dispatched records yet.</div>');
+  document.getElementById('harvestSummaryModal').classList.remove('hidden');
+}
+function closeHarvestSummary(event){const modal=document.getElementById('harvestSummaryModal');if(modal&&(!event||event.target===modal))modal.classList.add('hidden');}
 
+function formatPullOutDate(value) {
+  if(!value) return '';
+  const d=new Date(value);
+  if(isNaN(d.getTime())) return String(value);
+  const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return String(d.getDate()).padStart(2,'0')+'-'+months[d.getMonth()]+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+}
+function renderPullOutHistory(data) {
+  pullOutHistory=data||[];
+  const container=document.getElementById('pullOutHistory');
+  if(!pullOutHistory.length) {
+    container.innerHTML='<div class="empty">No dispatched records yet.</div>';
+    renderCurrentBoxTable(); return;
+  }
+  let html='<div class="swipe-hint">Swipe a record left or right to delete</div><table><tr><th>Pull Out ID</th><th>Date</th><th>Fish Size</th><th>Kilo / Box</th><th>Boxes Out</th><th>Dispatched</th></tr>';
+  pullOutHistory.forEach(function(record) {
+    const dispatched=Number(record.note)||1;
+    html+='<tr class="swipe-delete-row" ontouchstart="swipeStart(event)" ontouchend="swipeEnd(event, \'pull\', \''+escapeHTML(record.id)+'\')" onpointerdown="swipePointerStart(event)" onpointerup="swipePointerEnd(event, \'pull\', \''+escapeHTML(record.id)+'\')">';
+    html+='<td>'+escapeHTML(record.id)+'</td><td>'+escapeHTML(formatPullOutDate(record.date))+'</td><td>'+escapeHTML(record.fishSize)+'</td><td>'+Number(record.kiloPerBox||0).toFixed(2)+' kg</td><td>'+Number(record.boxes||0)+'</td>';
+    html+='<td><select aria-label="Dispatched" onchange="saveDispatched(\''+escapeHTML(record.id)+'\',this.value)">'+Array.from({length:10},function(_,i){const n=i+1;return '<option value="'+n+'" '+(n===dispatched?'selected':'')+'>'+n+'</option>';}).join('')+'</select></td></tr>';
+  });
+  html+='</table>'; container.innerHTML=html; renderCurrentBoxTable();
+}
 
 /* ==========================================================
    REMOVE PULL OUT
@@ -3466,8 +3446,7 @@ function completeHarvest() {
       document.getElementById("buyerRemaining").value
     ) || 0;
 
-  const note =
-    document.getElementById("harvestNote").value.trim();
+  const note = "";
 
   const button =
     event && event.target ?
@@ -3501,7 +3480,6 @@ function completeHarvest() {
       document.getElementById("buyerName").value = "";
       document.getElementById("buyerCashAdvance").value = "";
       document.getElementById("buyerRemaining").value = "";
-      document.getElementById("harvestNote").value = "";
 
       renderHarvestEntries();
       renderOutsiderEntries();
@@ -3567,7 +3545,6 @@ function clearTemporaryHarvest() {
       document.getElementById("buyerName").value = "";
       document.getElementById("buyerCashAdvance").value = "";
       document.getElementById("buyerRemaining").value = "";
-      document.getElementById("harvestNote").value = "";
 
       renderHarvestEntries();
       renderOutsiderEntries();
@@ -5029,7 +5006,13 @@ window.onload = function() {
     </div>
     <div id="editTransactionMessage" class="status status-info" style="margin-top:13px;display:none;"></div>
   </div>
-</div></body>
+</div><div id="harvestSummaryModal" class="report-modal hidden" onclick="closeHarvestSummary(event)">
+  <div class="report-paper" style="width:min(1200px,96vw);" onclick="event.stopPropagation()">
+    <div class="section-title"><h3>Harvest Summary</h3><button class="btn btn-secondary btn-small" onclick="closeHarvestSummary()">Close</button></div>
+    <div id="harvestSummaryContent"></div>
+  </div>
+</div>
+</body>
 </html>
 
 <!-- GitHub Pages update -->
