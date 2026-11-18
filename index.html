@@ -846,6 +846,21 @@
     .summary-scroll{overflow-x:auto}
     #harvestSummaryContent table{min-width:1050px}
     @media(max-width:650px){#harvestSummaryModal{padding:8px}#harvestSummaryModal .report-paper{padding:14px;width:98vw!important}.kilo-group>.harvest-size-summary{grid-template-columns:1fr 1fr}}
+    /* HARVEST TAB: centered layout */
+    #harvest, #harvest * { text-align:center; }
+    #harvest .form-group, #harvest .form-grid { justify-items:center; }
+    #harvest .form-group input, #harvest .form-group select, #harvest .form-group textarea { text-align:center; }
+    #harvest table th, #harvest table td { text-align:center; vertical-align:middle; }
+    #harvest .harvest-size-summary { grid-template-columns:minmax(0,1fr) auto auto; }
+    #harvest .kilo-group > .harvest-size-summary { grid-template-columns:minmax(0,1fr) auto auto; }
+    #harvest .fish-size-summary-left { display:flex; align-items:center; justify-content:center; gap:8px; }
+    #harvest .fish-size-kilo-total { font-size:11px; font-weight:700; color:var(--muted); white-space:nowrap; }
+    #harvest .fish-size-summary-counter { display:flex; align-items:center; justify-content:center; gap:5px; }
+    #harvest .fish-size-summary-counter button { width:25px; height:25px; border:1px solid var(--border); border-radius:7px; background:var(--card); color:var(--text); font-size:15px; font-weight:700; cursor:pointer; }
+    #harvest .fish-size-summary-counter span { min-width:24px; font-size:12px; font-weight:700; }
+    #harvestSummaryContent table { min-width:1120px; }
+    #harvestSummaryContent th, #harvestSummaryContent td { text-align:center; vertical-align:middle; }
+    #harvestSummaryContent .summary-merged { font-weight:800; background:var(--card2); }
 </style>
 </head>
 
@@ -1062,8 +1077,8 @@
         <h2>⚖️ Harvest</h2>
         <p>Temporary harvest weighing and delivery checking area</p>
         <div style="position:absolute;right:0;top:0;display:flex;gap:6px;">
-          <button type="button" class="btn btn-secondary btn-small" onclick="openHarvestSummary()">Summary</button>
           <button type="button" class="btn btn-secondary btn-small" onclick="openOutsiderModal()">Outsider</button>
+          <button type="button" class="btn btn-secondary btn-small" onclick="openHarvestSummary()">Summary</button>
         </div>
       </div>
 
@@ -2391,8 +2406,9 @@ function renderHarvestEntries() {
   Object.keys(groups).sort(function(a,b){return Number(a)-Number(b);}).forEach(function(key,g) {
     const groupId='harvestKiloGroup_'+g, items=groups[key];
     const totalBoxes=items.reduce(function(s,x){return s+(Number(x.entry.boxes)||0);},0);
+    const totalKilos=items.reduce(function(s,x){return s+(Number(x.entry.boxes)||0)*(Number(x.entry.kiloPerBox)||0)+(Number(x.entry.loose)||0);},0);
     const open=harvestOpenSizeEntries['kilo:'+key]===true;
-    html+='<div class="harvest-size-entry kilo-group"><div class="harvest-size-summary" onclick="toggleHarvestKiloGroup(\''+groupId+'\',\''+key+'\')"><strong>All Fish Sizes</strong><span class="harvest-kilo-summary">'+escapeHTML(key)+' kg / box</span><span><b>'+totalBoxes+'</b> boxes · '+items.length+' entries</span></div>';
+    html+='<div class="harvest-size-entry kilo-group"><div class="harvest-size-summary" onclick="toggleHarvestKiloGroup(\''+groupId+'\',\''+key+'\')"><strong>'+escapeHTML(key)+' kg / box</strong><span><b>'+totalBoxes+'</b> boxes</span><span class="harvest-kilo-summary">'+totalKilos.toFixed(2)+' kg total</span></div>';
     html+='<div id="'+groupId+'" class="harvest-size-detail '+(open?'':'hidden')+'">';
     items.forEach(function(item) {
       const entry=item.entry,index=item.index,fish=entry.fishSize||'New Fish Entry';
@@ -2401,7 +2417,10 @@ function renderHarvestEntries() {
       if(!Object.prototype.hasOwnProperty.call(harvestOpenSizeEntries,entry.id)) harvestOpenSizeEntries[entry.id]=true;
       const detailClass=harvestOpenSizeEntries[entry.id]?'harvest-size-detail':'harvest-size-detail hidden';
       html+='<div class="harvest-size-entry swipe-delete-card" ontouchstart="swipeStart(event)" ontouchend="swipeEnd(event, \'harvest\', '+index+')" onpointerdown="swipePointerStart(event)" onpointerup="swipePointerEnd(event, \'harvest\', '+index+')">';
-      html+='<div class="harvest-size-summary" onclick="toggleHarvestSize(\''+bodyId+'\')"><strong>'+escapeHTML(fish)+'</strong><span>'+boxes+' boxes</span><span>'+money(amount)+'</span></div>';
+      html+='<div class="harvest-size-summary" onclick="toggleHarvestSize(\''+bodyId+'\')">';
+      html+='<strong>'+escapeHTML(fish)+'</strong>';
+      html+='<span class="fish-size-summary-counter" onclick="event.stopPropagation()"><button type="button" onclick="changeBoxes('+index+',-1)">−</button><span>'+boxes+'</span><button type="button" onclick="changeBoxes('+index+',1)">+</button></span>';
+      html+='<span class="fish-size-kilo-total">'+kilos.toFixed(2)+' kg</span></div>';
       html+='<div id="'+bodyId+'" class="'+detailClass+'"><div class="form-grid">';
       html+='<div class="form-group"><label>Fish Size</label><select onchange="updateEntry('+index+', \'fishSize\', this.value)"><option value="">Select Fish Size</option><option value="OS" '+(String(fish).toUpperCase()==='OS'?'selected':'')+'>OS</option><option value="2-1" '+(fish==='2-1'?'selected':'')+'>2-1</option><option value="5-2" '+(fish==='5-2'?'selected':'')+'>5-2</option><option value="3-1" '+(fish==='3-1'?'selected':'')+'>3-1</option><option value="4-1" '+(fish==='4-1'?'selected':'')+'>4-1</option><option value="daing" '+(String(fish).toLowerCase()==='daing'?'selected':'')+'>Daing</option></select></div>';
       html+='<div class="form-group"><label>Kilo per Box</label><input type="number" min="0" step="0.01" value="'+kilo+'" oninput="updateEntryDraft('+index+', \'kiloPerBox\', this.value)" onchange="updateEntry('+index+', \'kiloPerBox\', this.value)"></div>';
@@ -3302,14 +3321,25 @@ function saveDispatched(id,value){
   google.script.run.withFailureHandler(function(err){alert('Unable to save dispatched count: '+err.message);}).updatePullOutDispatched(harvestCroppingID,id,count);
 }
 function openHarvestSummary(){
-  const rows=harvestEntries.map(function(e){const boxes=Number(e.boxes)||0,kilo=Number(e.kiloPerBox)||0,price=Number(e.pricePerKilo)||0,kilos=boxes*kilo+(Number(e.loose)||0);return {size:e.fishSize||'-',boxes:boxes,kilo:kilo,price:price,sales:kilos*price};});
+  const rows=harvestEntries.map(function(e){const boxes=Number(e.boxes)||0,kilo=Number(e.kiloPerBox)||0,price=Number(e.pricePerKilo)||0,kilos=boxes*kilo+(Number(e.loose)||0);return {size:e.fishSize||'-',boxes:boxes,kilo:kilo,kilos:kilos,price:price,sales:kilos*price};});
   const advance=Number(document.getElementById('buyerCashAdvance').value)||0;
-  const totalSales=rows.reduce(function(s,r){return s+r.sales;},0),net=totalSales*.95,remaining=Math.max(0,net-advance);
+  const totalBoxes=rows.reduce(function(s,r){return s+r.boxes;},0);
+  const totalKilos=rows.reduce(function(s,r){return s+r.kilos;},0);
+  const totalSales=rows.reduce(function(s,r){return s+r.sales;},0);
+  const net=totalSales*.95,remaining=Math.max(0,net-advance);
   const body=document.getElementById('harvestSummaryContent');
-  body.innerHTML='<div class="summary-scroll"><table><thead><tr><th>Fish Size</th><th>Boxes</th><th>Kilo per Box</th><th>Price</th><th>Sales</th><th>5% Net Income</th><th>Buyer Advance</th><th>Buyer Remaining Balance</th></tr></thead><tbody>'+
-    rows.map(function(r){return '<tr><td>'+escapeHTML(r.size)+'</td><td>'+r.boxes+'</td><td>'+r.kilo+'</td><td>'+money(r.price)+'</td><td>'+money(r.sales)+'</td><td>'+money(r.sales*.95)+'</td><td>'+money(advance)+'</td><td>'+money(Math.max(0,r.sales*.95-advance))+'</td></tr>';}).join('')+
-    '<tr class="total-row"><td>TOTAL</td><td>'+rows.reduce(function(s,r){return s+r.boxes;},0)+'</td><td>—</td><td>—</td><td>'+money(totalSales)+'</td><td>'+money(net)+'</td><td>'+money(advance)+'</td><td>'+money(remaining)+'</td></tr></tbody></table></div>' +
-    '<h4 style="margin:18px 0 8px;">Dispatched Record</h4>' +
+  let table='<div class="summary-scroll"><table><thead><tr><th>Fish Size</th><th>Boxes</th><th>Kilo per Box</th><th>Total Kilos</th><th>Price</th><th>Sales</th><th>5% Net Income</th><th>Buyer Advance</th><th>Buyer Remaining Balance</th></tr></thead><tbody>';
+  if(rows.length){
+    rows.forEach(function(r,i){
+      table+='<tr><td>'+escapeHTML(r.size)+'</td><td>'+r.boxes+'</td><td>'+r.kilo+'</td><td>'+r.kilos.toFixed(2)+'</td><td>'+money(r.price)+'</td><td>'+money(r.sales)+'</td>';
+      if(i===0) table+='<td class="summary-merged" rowspan="'+rows.length+'">'+money(net)+'</td><td class="summary-merged" rowspan="'+rows.length+'">'+money(advance)+'</td><td class="summary-merged" rowspan="'+rows.length+'">'+money(remaining)+'</td>';
+      table+='</tr>';
+    });
+  } else {
+    table+='<tr><td colspan="9" class="empty">No harvest entries yet.</td></tr>';
+  }
+  table+='<tr class="total-row"><td>TOTAL</td><td>'+totalBoxes+'</td><td>—</td><td>'+totalKilos.toFixed(2)+'</td><td>—</td><td>'+money(totalSales)+'</td><td>'+money(net)+'</td><td>'+money(advance)+'</td><td>'+money(remaining)+'</td></tr></tbody></table></div>';
+  body.innerHTML=table + '<h4 style="margin:18px 0 8px;">Dispatched Record</h4>' +
     (pullOutHistory.length ? '<div class="summary-scroll"><table><tr><th>Pull Out ID</th><th>Date</th><th>Fish Size</th><th>Kilo per Box</th><th>Boxes Out</th><th>Dispatched</th></tr>' +
       pullOutHistory.map(function(p){return '<tr><td>'+escapeHTML(p.id)+'</td><td>'+escapeHTML(formatPullOutDate(p.date))+'</td><td>'+escapeHTML(p.fishSize)+'</td><td>'+Number(p.kiloPerBox||0).toFixed(2)+'</td><td>'+Number(p.boxes||0)+'</td><td>'+escapeHTML(p.note||'1')+'</td></tr>';}).join('') + '</table></div>' :
       '<div class="empty">No dispatched records yet.</div>');
