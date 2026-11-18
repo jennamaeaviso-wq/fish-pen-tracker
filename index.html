@@ -861,6 +861,23 @@
     #harvestSummaryContent table { min-width:1120px; }
     #harvestSummaryContent th, #harvestSummaryContent td { text-align:center; vertical-align:middle; }
     #harvestSummaryContent .summary-merged { font-weight:800; background:var(--card2); }
+
+    /* HARVEST DISPLAY REFINEMENTS */
+    #harvest .harvest-kilo-summary,
+    #harvest .fish-size-kilo-total,
+    #harvest .harvest-group-boxes { font-size:11px; font-weight:700; white-space:nowrap; }
+    #harvest .fish-size-kilo-total, #harvest .harvest-kilo-summary, #harvest .harvest-group-boxes { color:var(--muted); }
+    #harvestSummaryModal { padding:8px; }
+    #harvestSummaryModal .report-paper { width:98vw !important; max-width:1800px; height:94vh; max-height:94vh; overflow:auto; padding:20px; }
+    #harvestSummaryContent { width:100%; }
+    #harvestSummaryContent .summary-scroll { width:100%; overflow:auto; }
+    #harvestSummaryContent table { width:100%; min-width:1120px; }
+    #harvestSummaryContent th, #harvestSummaryContent td { padding:10px 8px; }
+    @media(max-width:650px) {
+      #harvestSummaryModal .report-paper { width:100% !important; height:96vh; max-height:96vh; padding:10px; }
+      #harvestSummaryContent table { min-width:1050px; }
+    }
+
 </style>
 </head>
 
@@ -1936,6 +1953,12 @@ function money(value) {
    ESCAPE HTML
 ========================================================== */
 
+
+function formatHarvestKilos(value) {
+  const number = Number(value) || 0;
+  return number.toLocaleString("en-PH", { maximumFractionDigits: 2 });
+}
+
 function escapeHTML(value) {
 
   if (value === null || value === undefined) return "";
@@ -2408,7 +2431,7 @@ function renderHarvestEntries() {
     const totalBoxes=items.reduce(function(s,x){return s+(Number(x.entry.boxes)||0);},0);
     const totalKilos=items.reduce(function(s,x){return s+(Number(x.entry.boxes)||0)*(Number(x.entry.kiloPerBox)||0)+(Number(x.entry.loose)||0);},0);
     const open=harvestOpenSizeEntries['kilo:'+key]===true;
-    html+='<div class="harvest-size-entry kilo-group"><div class="harvest-size-summary" onclick="toggleHarvestKiloGroup(\''+groupId+'\',\''+key+'\')"><strong>'+escapeHTML(key)+' kg / box</strong><span><b>'+totalBoxes+'</b> boxes</span><span class="harvest-kilo-summary">'+totalKilos.toFixed(2)+' kg total</span></div>';
+    html+='<div class="harvest-size-entry kilo-group"><div class="harvest-size-summary" onclick="toggleHarvestKiloGroup(\''+groupId+'\',\''+key+'\')"><strong>'+escapeHTML(formatHarvestKilos(key))+'kg / box</strong><span class="harvest-group-boxes">'+totalBoxes+' boxes</span><span class="harvest-kilo-summary">'+formatHarvestKilos(totalKilos)+'kg</span></div>';
     html+='<div id="'+groupId+'" class="harvest-size-detail '+(open?'':'hidden')+'">';
     items.forEach(function(item) {
       const entry=item.entry,index=item.index,fish=entry.fishSize||'New Fish Entry';
@@ -2420,14 +2443,14 @@ function renderHarvestEntries() {
       html+='<div class="harvest-size-summary" onclick="toggleHarvestSize(\''+bodyId+'\')">';
       html+='<strong>'+escapeHTML(fish)+'</strong>';
       html+='<span class="fish-size-summary-counter" onclick="event.stopPropagation()"><button type="button" onclick="changeBoxes('+index+',-1)">−</button><span>'+boxes+'</span><button type="button" onclick="changeBoxes('+index+',1)">+</button></span>';
-      html+='<span class="fish-size-kilo-total">'+kilos.toFixed(2)+' kg</span></div>';
+      html+='<span class="fish-size-kilo-total">'+formatHarvestKilos(kilos)+'kg</span></div>';
       html+='<div id="'+bodyId+'" class="'+detailClass+'"><div class="form-grid">';
       html+='<div class="form-group"><label>Fish Size</label><select onchange="updateEntry('+index+', \'fishSize\', this.value)"><option value="">Select Fish Size</option><option value="OS" '+(String(fish).toUpperCase()==='OS'?'selected':'')+'>OS</option><option value="2-1" '+(fish==='2-1'?'selected':'')+'>2-1</option><option value="5-2" '+(fish==='5-2'?'selected':'')+'>5-2</option><option value="3-1" '+(fish==='3-1'?'selected':'')+'>3-1</option><option value="4-1" '+(fish==='4-1'?'selected':'')+'>4-1</option><option value="daing" '+(String(fish).toLowerCase()==='daing'?'selected':'')+'>Daing</option></select></div>';
       html+='<div class="form-group"><label>Kilo per Box</label><input type="number" min="0" step="0.01" value="'+kilo+'" oninput="updateEntryDraft('+index+', \'kiloPerBox\', this.value)" onchange="updateEntry('+index+', \'kiloPerBox\', this.value)"></div>';
       html+='<div class="form-group"><label>Price per Kilo</label><input type="number" min="0" step="0.01" value="'+price+'" oninput="updateEntryDraft('+index+', \'pricePerKilo\', this.value)" onchange="updateEntry('+index+', \'pricePerKilo\', this.value)"></div>';
       html+='<div class="form-group"><label>Box Count</label><div class="counter"><button onclick="changeBoxes('+index+',-1)">−</button><div class="count">'+boxes+'</div><button onclick="changeBoxes('+index+',1)">+</button><button class="btn btn-secondary btn-small harvest-entry-undo" onclick="undoEntryBox('+index+')">Undo</button></div></div></div>';
       html+='<div class="form-group" style="margin-top:10px;"><label>Loose</label><input type="number" min="0" step="0.01" value="'+loose+'" oninput="updateEntryDraft('+index+', \'loose\', this.value)" onchange="updateEntry('+index+', \'loose\', this.value)"></div>';
-      html+='<div class="entry-grid" style="margin-top:10px;"><div class="entry-stat"><span>TOTAL BOXES</span><strong>'+boxes+'</strong></div><div class="entry-stat"><span>LOOSE</span><strong>'+loose+' kg</strong></div><div class="entry-stat"><span>TOTAL KILOS</span><strong>'+kilos.toFixed(2)+' kg</strong></div><div class="entry-stat"><span>AMOUNT</span><strong>'+money(amount)+'</strong></div></div></div></div>';
+      html+='<div class="entry-grid" style="margin-top:10px;"><div class="entry-stat"><span>TOTAL BOXES</span><strong>'+boxes+'</strong></div><div class="entry-stat"><span>LOOSE</span><strong>'+loose+' kg</strong></div><div class="entry-stat"><span>TOTAL KILOS</span><strong>'+formatHarvestKilos(kilos)+'kg</strong></div><div class="entry-stat"><span>AMOUNT</span><strong>'+money(amount)+'</strong></div></div></div></div>';
     });
     html+='</div></div>';
   });
@@ -2719,7 +2742,7 @@ function renderCurrentBoxTable() {
 
         <td>${escapeHTML(entry.fishSize || "-")}</td>
 
-        <td>${Number(entry.kiloPerBox || 0).toFixed(2)} kg</td>
+        <td>${formatHarvestKilos(entry.kiloPerBox)}kg</td>
 
         <td>${Number(entry.boxes || 0)}</td>
 
@@ -2730,7 +2753,7 @@ function renderCurrentBoxTable() {
         </td>
 
         <td>
-          ${Number(entry.loose || 0).toFixed(2)} kg
+          ${formatHarvestKilos(entry.loose)}kg
         </td>
 
       </tr>
@@ -2834,7 +2857,7 @@ function updateHarvestTotals() {
     totalBoxes;
 
   document.getElementById("harvestTotalKilos").textContent =
-    totalKilos.toFixed(2) + " kg";
+    formatHarvestKilos(totalKilos) + "kg";
 
   document.getElementById("harvestTotalSales").textContent =
     money(totalSales);
@@ -2982,7 +3005,7 @@ function updateOutsiderTotals() {
   const amount = outsiderEntries.reduce((sum, item) => sum + ((Number(item.kilos) || 0) * (Number(item.pricePerKilo) || 0)), 0);
   const kiloEl = document.getElementById("outsiderTotalKilos");
   const amountEl = document.getElementById("outsiderTotalAmount");
-  if (kiloEl) kiloEl.textContent = kilos.toFixed(2) + " kg";
+  if (kiloEl) kiloEl.textContent = formatHarvestKilos(kilos) + "kg";
   if (amountEl) amountEl.textContent = money(amount);
 }
 
@@ -3331,17 +3354,17 @@ function openHarvestSummary(){
   let table='<div class="summary-scroll"><table><thead><tr><th>Fish Size</th><th>Boxes</th><th>Kilo per Box</th><th>Total Kilos</th><th>Price</th><th>Sales</th><th>5% Net Income</th><th>Buyer Advance</th><th>Buyer Remaining Balance</th></tr></thead><tbody>';
   if(rows.length){
     rows.forEach(function(r,i){
-      table+='<tr><td>'+escapeHTML(r.size)+'</td><td>'+r.boxes+'</td><td>'+r.kilo+'</td><td>'+r.kilos.toFixed(2)+'</td><td>'+money(r.price)+'</td><td>'+money(r.sales)+'</td>';
+      table+='<tr><td>'+escapeHTML(r.size)+'</td><td>'+r.boxes+'</td><td>'+r.kilo+'</td><td>'+formatHarvestKilos(r.kilos)+'</td><td>'+money(r.price)+'</td><td>'+money(r.sales)+'</td>';
       if(i===0) table+='<td class="summary-merged" rowspan="'+rows.length+'">'+money(net)+'</td><td class="summary-merged" rowspan="'+rows.length+'">'+money(advance)+'</td><td class="summary-merged" rowspan="'+rows.length+'">'+money(remaining)+'</td>';
       table+='</tr>';
     });
   } else {
     table+='<tr><td colspan="9" class="empty">No harvest entries yet.</td></tr>';
   }
-  table+='<tr class="total-row"><td>TOTAL</td><td>'+totalBoxes+'</td><td>—</td><td>'+totalKilos.toFixed(2)+'</td><td>—</td><td>'+money(totalSales)+'</td><td>'+money(net)+'</td><td>'+money(advance)+'</td><td>'+money(remaining)+'</td></tr></tbody></table></div>';
+  table+='<tr class="total-row"><td>TOTAL</td><td>'+totalBoxes+'</td><td>—</td><td>'+formatHarvestKilos(totalKilos)+'</td><td>—</td><td>'+money(totalSales)+'</td><td>'+money(net)+'</td><td>'+money(advance)+'</td><td>'+money(remaining)+'</td></tr></tbody></table></div>';
   body.innerHTML=table + '<h4 style="margin:18px 0 8px;">Dispatched Record</h4>' +
     (pullOutHistory.length ? '<div class="summary-scroll"><table><tr><th>Pull Out ID</th><th>Date</th><th>Fish Size</th><th>Kilo per Box</th><th>Boxes Out</th><th>Dispatched</th></tr>' +
-      pullOutHistory.map(function(p){return '<tr><td>'+escapeHTML(p.id)+'</td><td>'+escapeHTML(formatPullOutDate(p.date))+'</td><td>'+escapeHTML(p.fishSize)+'</td><td>'+Number(p.kiloPerBox||0).toFixed(2)+'</td><td>'+Number(p.boxes||0)+'</td><td>'+escapeHTML(p.note||'1')+'</td></tr>';}).join('') + '</table></div>' :
+      pullOutHistory.map(function(p){return '<tr><td>'+escapeHTML(p.id)+'</td><td>'+escapeHTML(formatPullOutDate(p.date))+'</td><td>'+escapeHTML(p.fishSize)+'</td><td>'+formatHarvestKilos(p.kiloPerBox)+'</td><td>'+Number(p.boxes||0)+'</td><td>'+escapeHTML(p.note||'1')+'</td></tr>';}).join('') + '</table></div>' :
       '<div class="empty">No dispatched records yet.</div>');
   document.getElementById('harvestSummaryModal').classList.remove('hidden');
 }
@@ -3559,50 +3582,54 @@ function clearTemporaryHarvest() {
   }
 
   if (!confirm(
-    "Clear the temporary harvest?\n\nCompleted Harvest Records will NOT be deleted."
+    "Clear all temporary Harvest entries and Dispatched Records for this cropping?\n\nCompleted Harvest Records will NOT be deleted."
   )) return;
 
+  const cropKey = String(harvestCroppingID).trim().toUpperCase();
+  // Remove older queued writes for this cropping so they cannot recreate
+  // records after the clear request has been processed.
+  try {
+    const queue = getOfflineMutationQueue().filter(function(item) {
+      const action = String(item.action || "");
+      const itemCrop = String(item.args && item.args[0] || "").trim().toUpperCase();
+      const isHarvestWrite = ["saveTemporaryHarvest", "addPullOutRecord", "removePullOutRecord", "clearTemporaryHarvest"].indexOf(action) >= 0;
+      return !(isHarvestWrite && itemCrop === cropKey);
+    });
+    saveOfflineMutationQueue(queue);
+  } catch (e) { console.warn("Could not clean queued Harvest changes", e); }
+
   google.script.run
-
     .withSuccessHandler(function(result) {
-
       try { localStorage.removeItem(getHarvestDraftKey(harvestCroppingID)); } catch (e) {}
       harvestEntries = [];
       outsiderEntries = [];
       pullOutHistory = [];
       actionHistory = [];
 
-      document.getElementById("buyerName").value = "";
-      document.getElementById("buyerCashAdvance").value = "";
-      document.getElementById("buyerRemaining").value = "";
+      ["buyerName", "buyerCashAdvance", "buyerRemaining"].forEach(function(id) {
+        const el = document.getElementById(id);
+        if (el) el.value = "";
+      });
 
       renderHarvestEntries();
       renderOutsiderEntries();
       renderCurrentBoxTable();
       renderPullOutHistory([]);
-
       updateHarvestTotals();
+      updatePullOutSelects();
 
-      document.getElementById("completeStatus").className =
-        "status status-success";
-
-      document.getElementById("completeStatus").textContent = result && result.offlineQueued
-        ? "Temporary Harvest cleared on this device. The clear request will sync when online."
-        : "Temporary harvest cleared. Permanent Harvest Records remain safe.";
-
+      const status = document.getElementById("completeStatus");
+      if (status) {
+        status.className = "status status-success";
+        status.textContent = result && result.offlineQueued
+          ? "Harvest and Dispatched Records cleared on this device. The clear request will sync when online."
+          : "Temporary Harvest and Dispatched Records cleared. Completed Harvest Records remain safe.";
+      }
     })
-
     .withFailureHandler(function(error) {
-
-      alert(
-        "Unable to clear harvest: " +
-        error.message
-      );
-
+      alert("Unable to clear harvest: " + (error && error.message ? error.message : error));
     })
-
     .clearTemporaryHarvest(harvestCroppingID);
-
 }
 
 
